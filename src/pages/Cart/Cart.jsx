@@ -426,16 +426,15 @@ const Cart = () => {
     const checkoutData = {
       items: cartItems,
       subtotal,
-      discount, // Passa o desconto aplicado
+      discount,
       shipping,
       total: subtotal + shipping - discount,
-      appliedCoupon, // Passa os dados do cupom aplicado
+      appliedCoupon,
       shippingInfo
     };
 
     console.log('Proceeding to checkout with data:', checkoutData);
     
-    // NOVO: Salvar dados no localStorage como backup
     try {
       localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
     } catch (err) {
@@ -445,11 +444,9 @@ const Cart = () => {
     showToast('Redirecionando para o checkout...', 'info');
 
     setTimeout(() => {
-      // Passa os dados via state do React Router
       navigate('/checkout', { 
         state: { 
           checkoutData: checkoutData,
-          // Para compatibilidade, também passa separadamente
           cartItems,
           subtotal,
           discount,
@@ -461,7 +458,6 @@ const Cart = () => {
     }, 1000);
   };
 
-  // Handle clear cart with confirmation
   const handleClearCart = async () => {
     if (!cartId || cartItems.length === 0) return;
 
@@ -498,7 +494,6 @@ const Cart = () => {
     );
   };
 
-  // Loading state
   if (loading) {
     return (
       <Layout>

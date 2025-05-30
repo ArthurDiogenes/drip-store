@@ -94,7 +94,6 @@ const Checkout = () => {
   const { user, profile } = useUser();
   const { cartItems, cartSubtotal } = useCart();
 
-  // Form states
   const [formData, setFormData] = useState({
     fullName: '',
     cpf: '',
@@ -116,7 +115,6 @@ const Checkout = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   
-  // Pricing states
   const [discount, setDiscount] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [couponCode, setCouponCode] = useState('');
@@ -216,7 +214,6 @@ const Checkout = () => {
             complement: userProfile.complemento || ''
           }));
 
-          // Auto-calculate shipping if CEP is available
           if (userProfile.cep) {
             handleShippingCalculation(userProfile.cep);
           }
@@ -301,7 +298,6 @@ const Checkout = () => {
     }
   };
 
-  // Calculate total
   const total = cartSubtotal + shipping - discount;
 
   const validateForm = () => {
@@ -357,7 +353,6 @@ const Checkout = () => {
 
       validateForm();
 
-      // Prepare order data
       const orderData = {
         userId: user.id,
         subtotal: currentSubtotal,
@@ -391,10 +386,8 @@ const Checkout = () => {
         await applyCoupon(appliedCoupon.id);
       }
 
-      // Show success toast instead of alert
       showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
       
-      // Navigate to success page after a brief delay
       setTimeout(() => {
         navigate('/compra-realizada', {
           state: {
@@ -496,7 +489,6 @@ const Checkout = () => {
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-md p-6 space-y-8">
                 
-                {/* Personal Information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações Pessoais</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
