@@ -53,7 +53,7 @@ const OrderItem = ({ orderId, productName, productImage, status, statusText }) =
             alt={productName} 
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "/src/assets/icons/icon-category-sneakers.svg";
+              e.target.src = "/icons/icon-category-sneakers.svg";
             }}
           />
         </div>

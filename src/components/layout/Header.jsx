@@ -10,7 +10,7 @@ import {
   CreditCard,
   LogOut,
 } from "lucide-react";
-import miniCartIconPath from "../../assets/icons/mini-cart.svg";
+import miniCartIconPath from "/icons/mini-cart.svg";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
 import { useCart } from "../../contexts/CartContext";
@@ -210,7 +210,7 @@ const Header = () => {
                 }}
               >
                 <img
-                  src="/src/assets/logos/logo-header.svg"
+                  src="/logos/logo-header.svg"
                   alt="Digital Store"
                   className="h-6"
                 />
@@ -253,7 +253,7 @@ const Header = () => {
                 onClick={() => setCurrentPage("home")}
               >
                 <img
-                  src="/src/assets/logos/logo-header.svg"
+                  src="/logos/logo-header.svg"
                   alt="Digital Store"
                   className="h-9"
                 />
@@ -435,7 +435,7 @@ const Header = () => {
             <div className="flex justify-between items-center mb-6">
               <Link to="/" className="flex items-center" onClick={toggleMenu}>
                 <img
-                  src="/src/assets/logos/logo-header.svg"
+                  src="/logos/logo-header.svg"
                   alt="Digital Store"
                   className="h-6"
                 />
