@@ -17,9 +17,8 @@ import AddPaymentMethod from "../pages/AddPaymentMethod/AddPaymentMethod.jsx";
 import ProtectedRoute from "../components/auth/ProtectedRoute.jsx";
 import { useUser } from "../contexts/UserContext.jsx";
 
-// 404 Page
 const NotFound = () => (
-  <div className="container mx-auto px-4 py-16 text-center text-black">
+  <div className="container mx-auto px-4 py-16 text-center text-black flex flex-col items-center justify-center h-screen">
     <h1 className="text-3xl font-bold mb-4 text-black">
       404 - Página não encontrada
     </h1>
@@ -35,11 +34,9 @@ const NotFound = () => (
   </div>
 );
 
-// Routes
 const AppRoutes = () => {
   const { user, loading } = useUser();
 
-  // Helper component to redirect authenticated users away from auth pages
   const RedirectIfAuthenticated = ({ children, redirectTo = "/" }) => {
     if (loading) {
       return (
@@ -58,13 +55,13 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Rotas Públicas */}
       <Route path="/" element={<Home />} />
       <Route path="/produtos" element={<ProductList />} />
       <Route path="/produto/:id" element={<ProductDetail />} />
       <Route path="/produto" element={<ProductDetail />} />
       
-      {/* Auth routes - redirect to home if already logged in */}
+      {/* Rotas de Autenticação - redireciona para Home se já logado */}
       <Route path="/login" element={
         <RedirectIfAuthenticated>
           <Login />
@@ -81,7 +78,7 @@ const AppRoutes = () => {
         </RedirectIfAuthenticated>
       } />
       
-      {/* Protected routes - require authentication */}
+      {/* Rotas protegidas - Requerem Autenticação */}
       <Route element={<ProtectedRoute />}>
         <Route path="/carrinho" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
