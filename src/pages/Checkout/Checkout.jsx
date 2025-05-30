@@ -119,8 +119,8 @@ const PaymentMethodCard = ({ method, isSelected, onSelect, disabled }) => {
   return (
     <div
       className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${isSelected
-          ? 'border-pink-500 bg-pink-50'
-          : 'border-gray-200 hover:border-gray-300 bg-white'
+        ? 'border-pink-500 bg-pink-50'
+        : 'border-gray-200 hover:border-gray-300 bg-white'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       onClick={() => !disabled && onSelect(method)}
     >
@@ -188,7 +188,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [discount, setDiscount] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [couponCode, setCouponCode] = useState('');
@@ -217,31 +217,31 @@ const Checkout = () => {
     const loadCheckoutData = () => {
       try {
         let data = location.state?.checkoutData;
-        
+
         if (!data) {
           const storedData = localStorage.getItem('checkoutData');
           if (storedData) {
             data = JSON.parse(storedData);
           }
         }
-        
+
         if (data) {
           setCheckoutData(data);
-          
+
           if (data.discount > 0) {
             setDiscount(data.discount);
             setAppliedCoupon(data.appliedCoupon);
-            
+
             if (data.appliedCoupon?.code) {
               setCouponCode(data.appliedCoupon.code);
             }
           }
-          
+
           if (data.shipping >= 0) {
             setShipping(data.shipping);
             setShippingCalculated(true);
           }
-          
+
           console.log('Checkout data loaded:', data);
         }
       } catch (err) {
@@ -382,12 +382,12 @@ const Checkout = () => {
     try {
       const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
       const result = await validateCoupon(couponCode, currentSubtotal);
-      
+
       if (result.isValid) {
         setAppliedCoupon(result.coupon);
         setDiscount(result.coupon.discountValue);
         showToast(`Cupom "${result.coupon.code}" aplicado com sucesso!`, 'success');
-        
+
         if (result.coupon.freeShipping && formData.zipcode) {
           const shippingResult = await getShippingCost(formData.zipcode, currentSubtotal, true);
           setShipping(shippingResult.cost);
@@ -411,14 +411,14 @@ const Checkout = () => {
       const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
       const freeShipping = appliedCoupon?.freeShipping || false;
       const result = await getShippingCost(zipCode, currentSubtotal, freeShipping);
-      
+
       setShipping(result.cost);
       setShippingCalculated(true);
-      
-      const message = result.isFree 
+
+      const message = result.isFree
         ? `Frete grátis! Entrega em ${result.deliveryTime}`
         : `Frete: R$ ${result.cost.toFixed(2).replace('.', ',')} - Entrega em ${result.deliveryTime}`;
-      
+
       showToast(message, 'success');
     } catch (error) {
       console.error('Error calculating shipping:', error);
@@ -438,7 +438,7 @@ const Checkout = () => {
 
   const validateForm = () => {
     const required = ['fullName', 'cpf', 'email', 'phone', 'address', 'neighborhood', 'city', 'zipcode'];
-    
+
     for (const field of required) {
       if (!formData[field].trim()) {
         throw new Error('Por favor, preencha todos os campos obrigatórios.');
@@ -486,7 +486,7 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setSubmitting(true);
       setError('');
@@ -504,8 +504,10 @@ const Checkout = () => {
         total: total,
         paymentMethod: formData.paymentMethod === 'saved'
           ? selectedPaymentMethod?.tipo || 'Cartão de Crédito'
-          : 'Cartão de Crédito',
-        installments: 10,
+          : formData.paymentMethod === 'boleto'
+            ? 'Boleto Bancário'
+            : 'Cartão de Crédito',
+        installments: formData.paymentMethod === 'boleto' ? 1 : 10,
         shippingAddress: {
           endereco: formData.address,
           bairro: formData.neighborhood,
@@ -545,10 +547,10 @@ const Checkout = () => {
       localStorage.removeItem('checkoutData');
 
       showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
-      
+
       setTimeout(() => {
-        navigate('/compra-realizada', { 
-          state: { 
+        navigate('/compra-realizada', {
+          state: {
             orderCode: order.codigo,
             orderData: orderData
           }
@@ -649,7 +651,7 @@ const Checkout = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-md p-6 space-y-8">
-                
+
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações Pessoais</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -849,6 +851,18 @@ const Checkout = () => {
                           />
                           Usar novo cartão
                         </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="paymentMethodType"
+                            value="boleto"
+                            checked={formData.paymentMethod === 'boleto'}
+                            onChange={(e) => handlePaymentTypeChange(e.target.value)}
+                            className="mr-2"
+                            disabled={submitting}
+                          />
+                          Boleto Bancário
+                        </label>
                       </div>
 
                       {formData.paymentMethod === 'saved' && (
@@ -865,19 +879,6 @@ const Checkout = () => {
                               disabled={submitting}
                             />
                           ))}
-                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                            <div className="flex items-start">
-                              <CreditCard className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
-                              <div>
-                                <p className="text-sm text-blue-800">
-                                  <strong>Cartão selecionado:</strong> Usaremos o cartão {selectedPaymentMethod ? `terminado em ${selectedPaymentMethod.ultimos_digitos}` : 'selecionado'} para processar seu pagamento.
-                                </p>
-                                <p className="text-xs text-blue-600 mt-1">
-                                  Você pode gerenciar seus cartões em <a href="/metodos-pagamento" className="underline">Métodos de Pagamento</a>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
                         </div>
                       )}
                     </div>
@@ -964,7 +965,7 @@ const Checkout = () => {
                   )}
 
                   {paymentMethods.length === 0 && (
-                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div className="mt-4 mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
                       <div className="flex items-start">
                         <Info className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
                         <div>
@@ -1022,7 +1023,7 @@ const Checkout = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   {currentItems.length > 3 && (
                     <div className="text-sm text-gray-500 text-center">
                       +{currentItems.length - 3} outros itens
@@ -1037,28 +1038,28 @@ const Checkout = () => {
                     <span>Subtotal:</span>
                     <span>R$ {currentSubtotal.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>Frete:</span>
                     <span>
                       {shipping === 0 ? 'Grátis' : `R$ ${shipping.toFixed(2).replace('.', ',')}`}
                     </span>
                   </div>
-                  
+
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto:</span>
                       <span>-R$ {discount.toFixed(2).replace('.', ',')}</span>
                     </div>
                   )}
-                  
+
                   <hr className="my-2" />
-                  
+
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
                     <span className="text-pink-600">R$ {total.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  
+
                   <div className="text-xs text-gray-500 text-right">
                     ou 10x de R$ {(total / 10).toFixed(2).replace('.', ',')} sem juros
                   </div>
