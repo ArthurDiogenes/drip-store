@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, X, ShoppingCart, Info } from 'lucide-react';
+import { CheckCircle, X, ShoppingCart, Info, Plus, CreditCard } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { useUser } from '../../contexts/UserContext';
 import { useCart } from '../../contexts/CartContext';
-import { getUserProfile } from '../../services/userService';
+import { getUserProfile, getUserPaymentMethods } from '../../services/userService';
 import { createOrder } from '../../services/orderService';
 import { validateCoupon, applyCoupon } from '../../services/couponService';
 import { getShippingCost } from '../../services/shippingService';
@@ -88,6 +88,75 @@ const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 
   );
 };
 
+const PaymentMethodCard = ({ method, isSelected, onSelect, disabled }) => {
+  const getCardBrandDisplay = (brand) => {
+    switch (brand?.toLowerCase()) {
+      case 'visa':
+        return { text: 'VISA', className: 'bg-blue-600 text-white' };
+      case 'mastercard':
+        return { text: 'MC', className: 'bg-red-600 text-white' };
+      case 'amex':
+        return { text: 'AMEX', className: 'bg-green-600 text-white' };
+      case 'elo':
+        return { text: 'ELO', className: 'bg-yellow-600 text-white' };
+      default:
+        return { text: brand?.toUpperCase() || 'CARD', className: 'bg-gray-600 text-white' };
+    }
+  };
+
+  const formatExpiryDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    if (dateString.includes('/')) return dateString;
+    if (dateString.includes('-')) {
+      const [year, month] = dateString.split('-');
+      return `${month}/${year.slice(-2)}`;
+    }
+    return dateString;
+  };
+
+  const brandInfo = getCardBrandDisplay(method.bandeira);
+
+  return (
+    <div
+      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${isSelected
+          ? 'border-pink-500 bg-pink-50'
+          : 'border-gray-200 hover:border-gray-300 bg-white'
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      onClick={() => !disabled && onSelect(method)}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className={`w-12 h-8 rounded flex items-center justify-center text-xs font-bold ${brandInfo.className}`}>
+            {brandInfo.text}
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">
+              •••• •••• •••• {method.ultimos_digitos}
+            </p>
+            <p className="text-sm text-gray-500">
+              {method.nome_titular} • Válido até {formatExpiryDate(method.data_validade)}
+            </p>
+            {method.padrao && (
+              <span className="inline-block mt-1 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                Padrão
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center">
+          <input
+            type="radio"
+            checked={isSelected}
+            onChange={() => !disabled && onSelect(method)}
+            className="w-4 h-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+            disabled={disabled}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { user, profile } = useUser();
@@ -103,13 +172,16 @@ const Checkout = () => {
     city: '',
     zipcode: '',
     complement: '',
-    paymentMethod: 'credit',
+    paymentMethod: 'saved',
+    selectedPaymentMethodId: '',
     cardName: '',
     cardNumber: '',
     expiryDate: '',
     cvv: ''
   });
 
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -183,6 +255,39 @@ const Checkout = () => {
           }));
         }
 
+        try {
+          const methods = await getUserPaymentMethods(user.id);
+          setPaymentMethods(methods);
+
+          const defaultMethod = methods.find(method => method.padrao);
+          if (defaultMethod) {
+            setSelectedPaymentMethod(defaultMethod);
+            setFormData(prev => ({
+              ...prev,
+              paymentMethod: 'saved',
+              selectedPaymentMethodId: defaultMethod.id
+            }));
+          } else if (methods.length > 0) {
+            setSelectedPaymentMethod(methods[0]);
+            setFormData(prev => ({
+              ...prev,
+              paymentMethod: 'saved',
+              selectedPaymentMethodId: methods[0].id
+            }));
+          } else {
+            setFormData(prev => ({
+              ...prev,
+              paymentMethod: 'new'
+            }));
+          }
+        } catch (paymentError) {
+          console.error('Error loading payment methods:', paymentError);
+          setFormData(prev => ({
+            ...prev,
+            paymentMethod: 'new'
+          }));
+        }
+
       } catch (err) {
         console.error('Error loading checkout data:', err);
         setError('Erro ao carregar dados do checkout. Tente novamente.');
@@ -200,6 +305,27 @@ const Checkout = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handlePaymentMethodSelection = (method) => {
+    setSelectedPaymentMethod(method);
+    setFormData(prev => ({
+      ...prev,
+      selectedPaymentMethodId: method.id,
+      paymentMethod: 'saved'
+    }));
+  };
+
+  const handlePaymentTypeChange = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      paymentMethod: type,
+      selectedPaymentMethodId: type === 'new' ? '' : prev.selectedPaymentMethodId
+    }));
+
+    if (type === 'new') {
+      setSelectedPaymentMethod(null);
+    }
   };
 
   const handleApplyCoupon = async () => {
@@ -279,9 +405,13 @@ const Checkout = () => {
       throw new Error('CEP deve ter 8 dígitos.');
     }
 
-    if (formData.paymentMethod === 'credit') {
+    if (formData.paymentMethod === 'saved') {
+      if (!selectedPaymentMethod || !formData.selectedPaymentMethodId) {
+        throw new Error('Selecione um método de pagamento.');
+      }
+    } else if (formData.paymentMethod === 'new') {
       if (!formData.cardName.trim()) {
-        throw new Error('Nome do cartão é obrigatório.');
+        throw new Error('Nome no cartão é obrigatório.');
       }
       if (!formData.cardNumber.trim() || formData.cardNumber.replace(/\D/g, '').length < 13) {
         throw new Error('Número do cartão inválido.');
@@ -314,8 +444,10 @@ const Checkout = () => {
         shipping: shipping,
         discount: discount,
         total: total,
-        paymentMethod: formData.paymentMethod === 'credit' ? 'Cartão de Crédito' : 'Boleto Bancário',
-        installments: formData.paymentMethod === 'credit' ? 10 : 1,
+        paymentMethod: formData.paymentMethod === 'saved'
+          ? selectedPaymentMethod?.tipo || 'Cartão de Crédito'
+          : 'Cartão de Crédito',
+        installments: 10,
         shippingAddress: {
           endereco: formData.address,
           bairro: formData.neighborhood,
@@ -329,7 +461,18 @@ const Checkout = () => {
           variacao_id: null,
           quantidade: item.quantidade,
           preco_unitario: item.produto.precoAtual
-        }))
+        })),
+        paymentMethodInfo: formData.paymentMethod === 'saved'
+          ? {
+            type: 'saved',
+            cardLastDigits: selectedPaymentMethod?.ultimos_digitos,
+            cardHolder: selectedPaymentMethod?.nome_titular
+          }
+          : {
+            type: 'new',
+            cardLastDigits: formData.cardNumber.slice(-4),
+            cardHolder: formData.cardName
+          }
       };
 
       console.log('Creating order with data:', orderData);
@@ -592,96 +735,157 @@ const Checkout = () => {
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Pagamento</h2>
 
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">Forma de Pagamento</label>
-                    <div className="flex space-x-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="credit"
-                          checked={formData.paymentMethod === 'credit'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                          disabled={submitting}
-                        />
-                        Cartão de Crédito
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="bankSlip"
-                          checked={formData.paymentMethod === 'bankSlip'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                          disabled={submitting}
-                        />
-                        Boleto Bancário
-                      </label>
-                    </div>
-                  </div>
+                  {paymentMethods.length > 0 && (
+                    <div className="mb-6">
+                      <div className="flex space-x-4 mb-4">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="paymentMethodType"
+                            value="saved"
+                            checked={formData.paymentMethod === 'saved'}
+                            onChange={(e) => handlePaymentTypeChange(e.target.value)}
+                            className="mr-2"
+                            disabled={submitting}
+                          />
+                          Usar cartão salvo
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="paymentMethodType"
+                            value="new"
+                            checked={formData.paymentMethod === 'new'}
+                            onChange={(e) => handlePaymentTypeChange(e.target.value)}
+                            className="mr-2"
+                            disabled={submitting}
+                          />
+                          Usar novo cartão
+                        </label>
+                      </div>
 
-                  {formData.paymentMethod === 'credit' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-1">
-                          Nome do Cartão <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="cardName"
-                          value={formData.cardName}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                          required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}
-                        />
+                      {formData.paymentMethod === 'saved' && (
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-medium text-gray-700 mb-3">
+                            Selecione um cartão salvo:
+                          </h3>
+                          {paymentMethods.map((method) => (
+                            <PaymentMethodCard
+                              key={method.id}
+                              method={method}
+                              isSelected={selectedPaymentMethod?.id === method.id}
+                              onSelect={handlePaymentMethodSelection}
+                              disabled={submitting}
+                            />
+                          ))}
+                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <div className="flex items-start">
+                              <CreditCard className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+                              <div>
+                                <p className="text-sm text-blue-800">
+                                  <strong>Cartão selecionado:</strong> Usaremos o cartão {selectedPaymentMethod ? `terminado em ${selectedPaymentMethod.ultimos_digitos}` : 'selecionado'} para processar seu pagamento.
+                                </p>
+                                <p className="text-xs text-blue-600 mt-1">
+                                  Você pode gerenciar seus cartões em <a href="/metodos-pagamento" className="underline">Métodos de Pagamento</a>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {formData.paymentMethod === 'new' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-gray-700">Informações do novo cartão:</h3>
+                        {paymentMethods.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/adicionar-cartao')}
+                            className="text-sm text-pink-600 hover:text-pink-700 underline flex items-center"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Salvar este cartão
+                          </button>
+                        )}
                       </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-1">
-                          Número do Cartão <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="cardNumber"
-                          value={formData.cardNumber}
-                          onChange={handleInputChange}
-                          placeholder="0000 0000 0000 0000"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                          required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}
-                        />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium mb-1">
+                            Nome no Cartão <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="cardName"
+                            value={formData.cardName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required={formData.paymentMethod === 'new'}
+                            disabled={submitting}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium mb-1">
+                            Número do Cartão <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="cardNumber"
+                            value={formData.cardNumber}
+                            onChange={handleInputChange}
+                            placeholder="0000 0000 0000 0000"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required={formData.paymentMethod === 'new'}
+                            disabled={submitting}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Data de Validade <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="expiryDate"
+                            value={formData.expiryDate}
+                            onChange={handleInputChange}
+                            placeholder="MM/AA"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required={formData.paymentMethod === 'new'}
+                            disabled={submitting}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            CVV <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="cvv"
+                            value={formData.cvv}
+                            onChange={handleInputChange}
+                            placeholder="123"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            required={formData.paymentMethod === 'new'}
+                            disabled={submitting}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Data de Validade <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="expiryDate"
-                          value={formData.expiryDate}
-                          onChange={handleInputChange}
-                          placeholder="MM/AA"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                          required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          CVV <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="cvv"
-                          value={formData.cvv}
-                          onChange={handleInputChange}
-                          placeholder="123"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                          required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}
-                        />
+                    </div>
+                  )}
+
+                  {paymentMethods.length === 0 && (
+                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <div className="flex items-start">
+                        <Info className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm text-yellow-800">
+                            Você não tem cartões salvos. Após este pedido, você pode salvar seus cartões em
+                            <a href="/metodos-pagamento" className="underline ml-1">Métodos de Pagamento</a> para checkout mais rápido.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -772,6 +976,20 @@ const Checkout = () => {
                     ou 10x de R$ {(total / 10).toFixed(2).replace('.', ',')} sem juros
                   </div>
                 </div>
+
+                {formData.paymentMethod === 'saved' && selectedPaymentMethod && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Método de Pagamento:</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-5 bg-blue-600 text-white text-xs flex items-center justify-center rounded">
+                        {selectedPaymentMethod.bandeira?.toUpperCase() || 'CARD'}
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        •••• {selectedPaymentMethod.ultimos_digitos}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="hidden md:block mt-6">
                   <button
