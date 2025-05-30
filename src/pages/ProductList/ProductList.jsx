@@ -17,46 +17,51 @@ const ProductList = () => {
   const [productCount, setProductCount] = useState(0);
 
   const [activeFilters, setActiveFilters] = useState({
-    brands: searchParams.getAll('marca') || [],
-    categories: searchParams.getAll('categoria') || [],
-    price: searchParams.get('preco') || null,
-    gender: searchParams.getAll('genero') || [],
-    condition: searchParams.get('estado') || null,
+    brands: searchParams.getAll("marca") || [],
+    categories: searchParams.getAll("categoria") || [],
+    price: searchParams.get("preco") || null,
+    gender: searchParams.getAll("genero") || [],
+    condition: searchParams.get("estado") || null,
   });
 
-  const [sortBy, setSortBy] = useState(searchParams.get('ordenar') || "relevancia");
+  const [sortBy, setSortBy] = useState(
+    searchParams.get("ordenar") || "relevancia"
+  );
 
-  const [page, setPage] = useState(parseInt(searchParams.get('pagina') || '1', 10));
-  const [pageSize] = useState(parseInt(searchParams.get('itens') || '12', 10));
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("pagina") || "1", 10)
+  );
+  const [pageSize] = useState(parseInt(searchParams.get("itens") || "12", 10));
 
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [searchQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery] = useState(searchParams.get("q") || "");
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         const { data: categoriesData, error: categoriesError } = await supabase
-          .from('categorias')
-          .select('id, nome, slug')
-          .eq('ativo', true)
-          .order('nome', { ascending: true });
+          .from("categorias")
+          .select("id, nome, slug")
+          .eq("ativo", true)
+          .order("nome", { ascending: true });
 
         if (categoriesError) throw categoriesError;
         setCategories(categoriesData || []);
 
         const { data: brandsData, error: brandsError } = await supabase
-          .from('marcas')
-          .select('id, nome, slug')
-          .eq('ativo', true)
-          .order('nome', { ascending: true });
+          .from("marcas")
+          .select("id, nome, slug")
+          .eq("ativo", true)
+          .order("nome", { ascending: true });
 
         if (brandsError) throw brandsError;
         setBrands(brandsData || []);
-
       } catch (error) {
-        console.error('Erro ao carregar dados iniciais:', error);
-        setError('Não foi possível carregar os filtros. Por favor, tente novamente mais tarde.');
+        console.error("Erro ao carregar dados iniciais:", error);
+        setError(
+          "Não foi possível carregar os filtros. Por favor, tente novamente mais tarde."
+        );
       }
     };
 
@@ -73,29 +78,30 @@ const ProductList = () => {
 
         if (activeFilters.categories.length > 0) {
           const { data: categoryData } = await supabase
-            .from('categorias')
-            .select('id')
-            .in('slug', activeFilters.categories);
+            .from("categorias")
+            .select("id")
+            .in("slug", activeFilters.categories);
 
           if (categoryData) {
-            categoryIds = categoryData.map(cat => cat.id);
+            categoryIds = categoryData.map((cat) => cat.id);
           }
         }
 
         if (activeFilters.brands.length > 0) {
           const { data: brandData } = await supabase
-            .from('marcas')
-            .select('id')
-            .in('slug', activeFilters.brands);
+            .from("marcas")
+            .select("id")
+            .in("slug", activeFilters.brands);
 
           if (brandData) {
-            brandIds = brandData.map(brand => brand.id);
+            brandIds = brandData.map((brand) => brand.id);
           }
         }
 
         let query = supabase
-          .from('produtos')
-          .select(`
+          .from("produtos")
+          .select(
+            `
             id, 
             nome, 
             slug, 
@@ -107,38 +113,44 @@ const ProductList = () => {
             genero,
             estado,
             imagens_produto (id, url, principal, ordem)
-          `, { count: 'exact' })
-          .eq('ativo', true);
+          `,
+            { count: "exact" }
+          )
+          .eq("ativo", true);
 
         if (brandIds.length > 0) {
-          query = query.in('marca_id', brandIds);
+          query = query.in("marca_id", brandIds);
         }
 
         if (categoryIds.length > 0) {
-          query = query.in('categoria_id', categoryIds);
+          query = query.in("categoria_id", categoryIds);
         }
 
         if (activeFilters.gender.length > 0) {
-          query = query.in('genero', activeFilters.gender);
+          query = query.in("genero", activeFilters.gender);
         }
 
         if (activeFilters.condition) {
-          query = query.eq('estado', activeFilters.condition);
+          query = query.eq("estado", activeFilters.condition);
         }
 
         if (activeFilters.price) {
           switch (activeFilters.price) {
-            case 'Até R$50':
-              query = query.lt('preco_promocional', 50);
+            case "Até R$50":
+              query = query.lt("preco_promocional", 50);
               break;
-            case 'R$50 a R$100':
-              query = query.gte('preco_promocional', 50).lte('preco_promocional', 100);
+            case "R$50 a R$100":
+              query = query
+                .gte("preco_promocional", 50)
+                .lte("preco_promocional", 100);
               break;
-            case 'R$100 a R$200':
-              query = query.gte('preco_promocional', 100).lte('preco_promocional', 200);
+            case "R$100 a R$200":
+              query = query
+                .gte("preco_promocional", 100)
+                .lte("preco_promocional", 200);
               break;
-            case 'Acima de R$200':
-              query = query.gt('preco_promocional', 200);
+            case "Acima de R$200":
+              query = query.gt("preco_promocional", 200);
               break;
             default:
               break;
@@ -146,27 +158,30 @@ const ProductList = () => {
         }
 
         if (searchQuery) {
-          query = query.textSearch('nome', searchQuery, {
-            config: 'portuguese'
-          });
+          // Busca por nome ou descrição usando ILIKE (case-insensitive)
+          query = query.or(
+            `nome.ilike.%${searchQuery}%,descricao.ilike.%${searchQuery}%`
+          );
         }
 
         if (sortBy) {
           switch (sortBy) {
-            case 'menor_preco':
-              query = query.order('preco_promocional', { ascending: true });
+            case "menor_preco":
+              query = query.order("preco_promocional", { ascending: true });
               break;
-            case 'maior_preco':
-              query = query.order('preco_promocional', { ascending: false });
+            case "maior_preco":
+              query = query.order("preco_promocional", { ascending: false });
               break;
-            case 'mais_recente':
-              query = query.order('data_criacao', { ascending: false });
+            case "mais_recente":
+              query = query.order("data_criacao", { ascending: false });
               break;
-            case 'mais_vendido':
-              query = query.order('quantidade_vendas', { ascending: false });
+            case "mais_vendido":
+              query = query.order("quantidade_vendas", { ascending: false });
               break;
             default:
-              query = query.order('destacado', { ascending: false }).order('quantidade_vendas', { ascending: false });
+              query = query
+                .order("destacado", { ascending: false })
+                .order("quantidade_vendas", { ascending: false });
               break;
           }
         }
@@ -174,14 +189,14 @@ const ProductList = () => {
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
 
-        const { data, error, count } = await query
-          .range(from, to);
+        const { data, error, count } = await query.range(from, to);
 
         if (error) throw error;
 
-        const formattedData = data.map(product => {
+        const formattedData = data.map((product) => {
           const imagens = product.imagens_produto || [];
-          const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
+          const imagemPrincipal =
+            imagens.find((img) => img.principal) || imagens[0];
 
           return {
             id: product.id,
@@ -190,9 +205,10 @@ const ProductList = () => {
             precoOriginal: product.preco_original,
             precoAtual: product.preco_promocional || product.preco_original,
             desconto: product.desconto_porcentagem,
-            categoria: product.categoria_id?.nome || '',
-            marca: product.marca_id?.nome || '',
-            imagemUrl: imagemPrincipal?.url || '../images/products/produc-image-0.png'
+            categoria: product.categoria_id?.nome || "",
+            marca: product.marca_id?.nome || "",
+            imagemUrl:
+              imagemPrincipal?.url || "../images/products/produc-image-0.png",
           };
         });
 
@@ -200,8 +216,10 @@ const ProductList = () => {
         setProductCount(count || 0);
         setError(null);
       } catch (err) {
-        console.error('Erro ao carregar produtos:', err);
-        setError('Não foi possível carregar os produtos. Tente novamente mais tarde.');
+        console.error("Erro ao carregar produtos:", err);
+        setError(
+          "Não foi possível carregar os produtos. Tente novamente mais tarde."
+        );
         setProducts([]);
       } finally {
         setLoading(false);
@@ -212,18 +230,22 @@ const ProductList = () => {
 
     const newParams = new URLSearchParams();
 
-    activeFilters.brands.forEach(brand => newParams.append('marca', brand));
-    activeFilters.categories.forEach(category => newParams.append('categoria', category));
-    activeFilters.gender.forEach(gender => newParams.append('genero', gender));
+    activeFilters.brands.forEach((brand) => newParams.append("marca", brand));
+    activeFilters.categories.forEach((category) =>
+      newParams.append("categoria", category)
+    );
+    activeFilters.gender.forEach((gender) =>
+      newParams.append("genero", gender)
+    );
 
-    if (activeFilters.price) newParams.set('preco', activeFilters.price);
-    if (activeFilters.condition) newParams.set('estado', activeFilters.condition);
-    if (sortBy) newParams.set('ordenar', sortBy);
-    if (page > 1) newParams.set('pagina', page.toString());
-    if (searchQuery) newParams.set('q', searchQuery);
+    if (activeFilters.price) newParams.set("preco", activeFilters.price);
+    if (activeFilters.condition)
+      newParams.set("estado", activeFilters.condition);
+    if (sortBy) newParams.set("ordenar", sortBy);
+    if (page > 1) newParams.set("pagina", page.toString());
+    if (searchQuery) newParams.set("q", searchQuery);
 
     setSearchParams(newParams);
-
   }, [activeFilters, sortBy, page, pageSize, searchQuery, setSearchParams]);
 
   const toggleFilter = () => {
@@ -242,8 +264,7 @@ const ProductList = () => {
         } else {
           updated[category] = [...updated[category], value];
         }
-      }
-      else {
+      } else {
         updated[category] = updated[category] === value ? null : value;
       }
 
@@ -268,7 +289,7 @@ const ProductList = () => {
     });
     setPage(1);
 
-    navigate('/produtos');
+    navigate("/produtos");
   };
 
   const handlePageChange = (newPage) => {
@@ -282,16 +303,24 @@ const ProductList = () => {
     }
 
     if (activeFilters.categories.length === 1) {
-      const categoryName = categories.find(cat => cat.slug === activeFilters.categories[0])?.nome;
+      const categoryName = categories.find(
+        (cat) => cat.slug === activeFilters.categories[0]
+      )?.nome;
       return categoryName || "Produtos";
     }
 
     if (activeFilters.brands.length === 1) {
-      const brandName = brands.find(brand => brand.slug === activeFilters.brands[0])?.nome;
-      return `Produtos ${brandName}` || "Produtos";
+      const brandName = brands.find(
+        (brand) => brand.slug === activeFilters.brands[0]
+      )?.nome;
+      return brandName ? `Produtos ${brandName}` : "Produtos";
     }
-
     return "Produtos";
+  };
+
+  // Adicione esta função para mostrar quando é uma busca
+  const isSearchResults = () => {
+    return searchQuery && searchQuery.trim() !== "";
   };
 
   return (
@@ -310,8 +339,19 @@ const ProductList = () => {
             <div>
               <h1 className="text-xl font-medium">{getPageTitle()}</h1>
               <span className="text-sm text-gray-500">
-                {productCount} {productCount === 1 ? 'produto' : 'produtos'}
+                {productCount} {productCount === 1 ? "produto" : "produtos"}
               </span>
+              {isSearchResults() && (
+                <button
+                  onClick={() => {
+                    navigate("/produtos");
+                    setSearchParams(new URLSearchParams());
+                  }}
+                  className="mt-2 text-sm text-pink-600 hover:text-pink-800 underline"
+                >
+                  Limpar busca
+                </button>
+              )}
             </div>
 
             <div className="flex items-center w-full md:w-auto justify-between">
@@ -352,12 +392,14 @@ const ProductList = () => {
             <aside className="hidden md:block w-64 flex-shrink-0">
               <div className="bg-white rounded-md shadow-sm p-4">
                 <div className="flex justify-between items-center">
-                  <h2 className="font-medium mb-4 pb-3 border-b border-gray-200 w-full">Filtrar por</h2>
+                  <h2 className="font-medium mb-4 pb-3 border-b border-gray-200 w-full">
+                    Filtrar por
+                  </h2>
                   {activeFilters.brands.length > 0 ||
-                    activeFilters.categories.length > 0 ||
-                    activeFilters.price ||
-                    activeFilters.gender.length > 0 ||
-                    activeFilters.condition ? (
+                  activeFilters.categories.length > 0 ||
+                  activeFilters.price ||
+                  activeFilters.gender.length > 0 ||
+                  activeFilters.condition ? (
                     <button
                       onClick={clearAllFilters}
                       className="text-sm text-pink-600 hover:text-pink-800 transition-colors ml-2"
@@ -379,7 +421,9 @@ const ProductList = () => {
                           type="checkbox"
                           className={styles.customCheckbox}
                           checked={activeFilters.brands.includes(brand.slug)}
-                          onChange={() => handleFilterChange("brands", brand.slug)}
+                          onChange={() =>
+                            handleFilterChange("brands", brand.slug)
+                          }
                         />
                         {brand.nome}
                       </label>
@@ -398,8 +442,12 @@ const ProductList = () => {
                         <input
                           type="checkbox"
                           className={styles.customCheckbox}
-                          checked={activeFilters.categories.includes(category.slug)}
-                          onChange={() => handleFilterChange("categories", category.slug)}
+                          checked={activeFilters.categories.includes(
+                            category.slug
+                          )}
+                          onChange={() =>
+                            handleFilterChange("categories", category.slug)
+                          }
                         />
                         {category.nome}
                       </label>
@@ -425,7 +473,9 @@ const ProductList = () => {
                           name="price"
                           className={styles.customRadio}
                           checked={activeFilters.price === priceRange}
-                          onChange={() => handleFilterChange("price", priceRange)}
+                          onChange={() =>
+                            handleFilterChange("price", priceRange)
+                          }
                         />
                         {priceRange}
                       </label>
@@ -437,7 +487,10 @@ const ProductList = () => {
                   <h3 className="text-sm font-medium mb-3">Gênero</h3>
                   <div className="space-y-2">
                     {["Masculino", "Feminino", "Unisex"].map((gender) => (
-                      <label key={gender} className={`${styles.checkboxLabel} text-sm`}>
+                      <label
+                        key={gender}
+                        className={`${styles.checkboxLabel} text-sm`}
+                      >
                         <input
                           type="checkbox"
                           className={styles.customCheckbox}
@@ -463,7 +516,9 @@ const ProductList = () => {
                           name="condition"
                           className={styles.customRadio}
                           checked={activeFilters.condition === condition}
-                          onChange={() => handleFilterChange("condition", condition)}
+                          onChange={() =>
+                            handleFilterChange("condition", condition)
+                          }
                         />
                         {condition}
                       </label>
@@ -495,7 +550,9 @@ const ProductList = () => {
                 </div>
               ) : products.length === 0 ? (
                 <div className="bg-white rounded-md p-8 text-center">
-                  <p className="text-gray-500 mb-4">Nenhum produto encontrado com os filtros selecionados.</p>
+                  <p className="text-gray-500 mb-4">
+                    Nenhum produto encontrado com os filtros selecionados.
+                  </p>
                   <button
                     onClick={clearAllFilters}
                     className="bg-pink-600 text-white px-4 py-2 rounded-md hover:bg-pink-700 transition-colors"
@@ -519,24 +576,30 @@ const ProductList = () => {
                           </button>
                         )}
 
-                        {[...Array(Math.ceil(productCount / pageSize))].slice(
-                          Math.max(0, page - 3),
-                          Math.min(Math.ceil(productCount / pageSize), page + 2)
-                        ).map((_, i) => {
-                          const pageNumber = Math.max(1, page - 2) + i;
-                          return (
-                            <button
-                              key={pageNumber}
-                              onClick={() => handlePageChange(pageNumber)}
-                              className={`px-4 py-2 border rounded-md ${pageNumber === page
-                                ? 'bg-pink-600 text-white border-pink-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        {[...Array(Math.ceil(productCount / pageSize))]
+                          .slice(
+                            Math.max(0, page - 3),
+                            Math.min(
+                              Math.ceil(productCount / pageSize),
+                              page + 2
+                            )
+                          )
+                          .map((_, i) => {
+                            const pageNumber = Math.max(1, page - 2) + i;
+                            return (
+                              <button
+                                key={pageNumber}
+                                onClick={() => handlePageChange(pageNumber)}
+                                className={`px-4 py-2 border rounded-md ${
+                                  pageNumber === page
+                                    ? "bg-pink-600 text-white border-pink-600"
+                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                                 }`}
-                            >
-                              {pageNumber}
-                            </button>
-                          );
-                        })}
+                              >
+                                {pageNumber}
+                              </button>
+                            );
+                          })}
 
                         {page < Math.ceil(productCount / pageSize) && (
                           <button
@@ -558,7 +621,10 @@ const ProductList = () => {
 
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={toggleFilter}></div>
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={toggleFilter}
+          ></div>
           <div className="absolute top-0 right-0 bottom-0 w-80 bg-white overflow-y-auto">
             <div className="p-4">
               <div className="flex justify-between items-center mb-6">
@@ -572,12 +638,17 @@ const ProductList = () => {
                 <h3 className="text-sm font-medium mb-3">Marca</h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                   {brands.map((brand) => (
-                    <label key={brand.id} className={`${styles.checkboxLabel} text-sm`}>
+                    <label
+                      key={brand.id}
+                      className={`${styles.checkboxLabel} text-sm`}
+                    >
                       <input
                         type="checkbox"
                         className={styles.customCheckbox}
                         checked={activeFilters.brands.includes(brand.slug)}
-                        onChange={() => handleFilterChange("brands", brand.slug)}
+                        onChange={() =>
+                          handleFilterChange("brands", brand.slug)
+                        }
                       />
                       {brand.nome}
                     </label>
@@ -596,8 +667,12 @@ const ProductList = () => {
                       <input
                         type="checkbox"
                         className={styles.customCheckbox}
-                        checked={activeFilters.categories.includes(category.slug)}
-                        onChange={() => handleFilterChange("categories", category.slug)}
+                        checked={activeFilters.categories.includes(
+                          category.slug
+                        )}
+                        onChange={() =>
+                          handleFilterChange("categories", category.slug)
+                        }
                       />
                       {category.nome}
                     </label>
@@ -635,7 +710,10 @@ const ProductList = () => {
                 <h3 className="text-sm font-medium mb-3">Gênero</h3>
                 <div className="space-y-2">
                   {["Masculino", "Feminino", "Unisex"].map((gender) => (
-                    <label key={gender} className={`${styles.checkboxLabel} text-sm`}>
+                    <label
+                      key={gender}
+                      className={`${styles.checkboxLabel} text-sm`}
+                    >
                       <input
                         type="checkbox"
                         className={styles.customCheckbox}
@@ -661,7 +739,9 @@ const ProductList = () => {
                         name="condition-mobile"
                         className={styles.customRadio}
                         checked={activeFilters.condition === condition}
-                        onChange={() => handleFilterChange("condition", condition)}
+                        onChange={() =>
+                          handleFilterChange("condition", condition)
+                        }
                       />
                       {condition}
                     </label>
@@ -685,16 +765,16 @@ const ProductList = () => {
                   activeFilters.price ||
                   activeFilters.gender.length > 0 ||
                   activeFilters.condition) && (
-                    <button
-                      className="w-full mt-3 py-2 text-sm text-gray-700 hover:text-pink-600 transition-colors underline"
-                      onClick={() => {
-                        clearAllFilters();
-                        toggleFilter();
-                      }}
-                    >
-                      Limpar Filtros
-                    </button>
-                  )}
+                  <button
+                    className="w-full mt-3 py-2 text-sm text-gray-700 hover:text-pink-600 transition-colors underline"
+                    onClick={() => {
+                      clearAllFilters();
+                      toggleFilter();
+                    }}
+                  >
+                    Limpar Filtros
+                  </button>
+                )}
               </div>
             </div>
           </div>

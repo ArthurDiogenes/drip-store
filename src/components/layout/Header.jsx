@@ -62,12 +62,12 @@ const Header = () => {
   // FIX: Listen for cart updates and refresh cart data
   useEffect(() => {
     const handleCartUpdate = () => {
-      console.log('Cart update event received in Header');
+      console.log("Cart update event received in Header");
       refreshCart();
     };
 
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    return () => window.removeEventListener("cartUpdated", handleCartUpdate);
   }, [refreshCart]);
 
   useEffect(() => {
@@ -163,6 +163,29 @@ const Header = () => {
     setSearchValue(e.target.value);
   };
 
+  // Função para executar a pesquisa
+  const handleSearch = (e) => {
+    e?.preventDefault();
+
+    if (searchValue.trim()) {
+      // Fecha todos os popovers
+      closeAllPopovers();
+
+      // Navega para a página de produtos com o termo de busca
+      navigate(`/produtos?q=${encodeURIComponent(searchValue.trim())}`);
+
+      // Limpa o campo de busca
+      setSearchValue("");
+    }
+  };
+
+  // Função para lidar com Enter no input
+  const handleSearchKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch(e);
+    }
+  };
+
   const getFirstName = () => {
     if (profile && profile.nome_completo) {
       return profile.nome_completo.split(" ")[0];
@@ -173,13 +196,13 @@ const Header = () => {
   // FIX: Add function to handle cart clearing
   const handleClearCart = async () => {
     try {
-      const { clearCart, getCart } = await import('../../services/cartService');
+      const { clearCart, getCart } = await import("../../services/cartService");
       const cartId = await getCart(user?.id);
       await clearCart(cartId);
       refreshCart();
       setIsCartOpen(false);
     } catch (error) {
-      console.error('Error clearing cart:', error);
+      console.error("Error clearing cart:", error);
     }
   };
 
@@ -261,16 +284,26 @@ const Header = () => {
             </div>
             <div className="flex-1 max-w-2xl mx-auto px-8">
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Pesquisar produto..."
-                  value={searchValue}
-                  onChange={handleSearchChange}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-md bg-gray-100 focus:outline-none text-gray-800 focus:placeholder-transparent"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <Search className="text-gray-400 cursor-pointer" size={20} />
-                </div>
+                <form onSubmit={handleSearch}>
+                  <input
+                    type="text"
+                    placeholder="Pesquisar produto..."
+                    value={searchValue}
+                    onChange={handleSearchChange}
+                    onKeyPress={handleSearchKeyPress}
+                    className="w-full pl-4 pr-10 py-2.5 rounded-md bg-gray-100 focus:outline-none text-gray-800 focus:placeholder-transparent"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 bg-transparent border-none"
+                    aria-label="Pesquisar"
+                  >
+                    <Search
+                      className="text-gray-400 cursor-pointer hover:text-gray-600"
+                      size={20}
+                    />
+                  </button>
+                </form>
               </div>
             </div>
             <div className="flex items-center">
@@ -385,21 +418,24 @@ const Header = () => {
 
         {isSearchOpen && (
           <div className="md:hidden py-3 pb-5">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 placeholder="Pesquisar produto..."
                 value={searchValue}
                 onChange={handleSearchChange}
+                onKeyPress={handleSearchKeyPress}
                 className="w-full pl-4 pr-10 py-2.5 rounded-md bg-gray-100 focus:outline-none text-gray-800 focus:placeholder-transparent"
                 autoFocus
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <button className="bg-transparent border-none p-1">
-                  <Search className="text-gray-400" size={20} />
-                </button>
-              </div>
-            </div>
+              <button
+                type="submit"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 bg-transparent border-none p-1"
+                aria-label="Pesquisar"
+              >
+                <Search className="text-gray-400" size={20} />
+              </button>
+            </form>
           </div>
         )}
 
@@ -416,10 +452,11 @@ const Header = () => {
                   key={item}
                   to={path}
                   onClick={() => setCurrentPage(pageName)}
-                  className={`text-sm transition-colors hover:text-pink-600 ${currentPage === pageName
-                    ? "text-pink-600 border-b-2 border-pink-600 pb-1 font-medium"
-                    : "text-gray-700"
-                    }`}
+                  className={`text-sm transition-colors hover:text-pink-600 ${
+                    currentPage === pageName
+                      ? "text-pink-600 border-b-2 border-pink-600 pb-1 font-medium"
+                      : "text-gray-700"
+                  }`}
                 >
                   {item}
                 </Link>
@@ -467,10 +504,11 @@ const Header = () => {
                         setCurrentPage(pageName);
                         toggleMenu();
                       }}
-                      className={`flex items-center space-x-3 px-2 py-2.5 text-base transition-colors hover:bg-pink-50 hover:text-pink-600 rounded-md ${currentPage === pageName
-                        ? "text-pink-600 font-medium bg-pink-50"
-                        : "text-gray-700"
-                        }`}
+                      className={`flex items-center space-x-3 px-2 py-2.5 text-base transition-colors hover:bg-pink-50 hover:text-pink-600 rounded-md ${
+                        currentPage === pageName
+                          ? "text-pink-600 font-medium bg-pink-50"
+                          : "text-gray-700"
+                      }`}
                     >
                       <span>{item}</span>
                     </Link>
@@ -590,7 +628,14 @@ const Header = () => {
             <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
               {cartItems && cartItems.length > 0 ? (
                 cartItems.slice(0, 3).map((item, index) => (
-                  <div key={item.id} className={`flex items-center gap-3 ${index < cartItems.length - 1 ? 'border-b border-gray-200 pb-3' : ''}`}>
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-3 ${
+                      index < cartItems.length - 1
+                        ? "border-b border-gray-200 pb-3"
+                        : ""
+                    }`}
+                  >
                     <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden p-1">
                       <img
                         src={item.produto.imagemUrl}
@@ -598,7 +643,8 @@ const Header = () => {
                         className="object-contain max-h-full max-w-full"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = '../images/products/produc-image-0.png';
+                          e.target.src =
+                            "../images/products/produc-image-0.png";
                         }}
                       />
                     </div>
@@ -606,13 +652,24 @@ const Header = () => {
                       <h4 className="text-sm font-medium text-gray-800 line-clamp-2">
                         {item.produto.nome}
                       </h4>
-                      {item.cor && <p className="text-xs text-gray-500 mt-0.5">Cor: {item.cor}</p>}
-                      {item.tamanho && <p className="text-xs text-gray-500">Tamanho: {item.tamanho}</p>}
+                      {item.cor && (
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Cor: {item.cor}
+                        </p>
+                      )}
+                      {item.tamanho && (
+                        <p className="text-xs text-gray-500">
+                          Tamanho: {item.tamanho}
+                        </p>
+                      )}
                       <div className="flex justify-between items-center mt-1.5">
                         <span className="text-sm text-pink-600 font-semibold">
-                          R$ {item.produto.precoAtual.toFixed(2).replace('.', ',')}
+                          R${" "}
+                          {item.produto.precoAtual.toFixed(2).replace(".", ",")}
                         </span>
-                        <span className="text-xs text-gray-500">{item.quantidade} unid.</span>
+                        <span className="text-xs text-gray-500">
+                          {item.quantidade} unid.
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -629,7 +686,7 @@ const Header = () => {
                   Valor total:
                 </span>
                 <span className="text-base font-semibold text-pink-600">
-                  R$ {cartSubtotal.toFixed(2).replace('.', ',')}
+                  R$ {cartSubtotal.toFixed(2).replace(".", ",")}
                 </span>
               </div>
               <div className="flex flex-col space-y-2.5">
@@ -643,7 +700,7 @@ const Header = () => {
                 >
                   Ver Carrinho
                 </Link>
-                <button 
+                <button
                   onClick={handleClearCart}
                   className="w-full py-2 text-sm text-gray-600 hover:text-pink-600 active:text-pink-600 transition-colors underline"
                 >
