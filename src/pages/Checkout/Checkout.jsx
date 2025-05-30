@@ -94,6 +94,8 @@ const Checkout = () => {
   const { user, profile } = useUser();
   const { cartItems, cartSubtotal } = useCart();
 
+  const [checkoutData, setCheckoutData] = useState(null);
+
   const [formData, setFormData] = useState({
     fullName: '',
     cpf: '',
@@ -189,8 +191,8 @@ const Checkout = () => {
           return;
         }
 
-        // Check if cart has items
-        if (!cartItems || cartItems.length === 0) {
+        const itemsToCheck = checkoutData?.items || cartItems;
+        if (!itemsToCheck || itemsToCheck.length === 0) {
           navigate('/carrinho');
           return;
         }
@@ -214,7 +216,7 @@ const Checkout = () => {
             complement: userProfile.complemento || ''
           }));
 
-          if (userProfile.cep) {
+          if (userProfile.cep && !shippingCalculated) {
             handleShippingCalculation(userProfile.cep);
           }
         } else {
@@ -252,14 +254,14 @@ const Checkout = () => {
     }
 
     try {
-      const result = await validateCoupon(couponCode, cartSubtotal);
+      const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
+      const result = await validateCoupon(couponCode, currentSubtotal);
       
       if (result.isValid) {
         setAppliedCoupon(result.coupon);
         setDiscount(result.coupon.discountValue);
         showToast(`Cupom "${result.coupon.code}" aplicado com sucesso!`, 'success');
         
-        // Recalculate shipping if free shipping coupon
         if (result.coupon.freeShipping && formData.zipcode) {
           const shippingResult = await getShippingCost(formData.zipcode, currentSubtotal, true);
           setShipping(shippingResult.cost);
@@ -282,15 +284,15 @@ const Checkout = () => {
     try {
       const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
       const freeShipping = appliedCoupon?.freeShipping || false;
-      const result = await getShippingCost(zipCode, cartSubtotal, freeShipping);
+      const result = await getShippingCost(zipCode, currentSubtotal, freeShipping);
       
       setShipping(result.cost);
       setShippingCalculated(true);
-
-      const message = result.isFree
+      
+      const message = result.isFree 
         ? `Frete grátis! Entrega em ${result.deliveryTime}`
         : `Frete: R$ ${result.cost.toFixed(2).replace('.', ',')} - Entrega em ${result.deliveryTime}`;
-
+      
       showToast(message, 'success');
     } catch (error) {
       console.error('Error calculating shipping:', error);
@@ -298,11 +300,19 @@ const Checkout = () => {
     }
   };
 
-  const total = cartSubtotal + shipping - discount;
+  const getCurrentSubtotal = () => {
+    return checkoutData?.subtotal || cartSubtotal || 0;
+  };
+
+  const getCurrentItems = () => {
+    return checkoutData?.items || cartItems || [];
+  };
+
+  const total = getCurrentSubtotal() + shipping - discount;
 
   const validateForm = () => {
     const required = ['fullName', 'cpf', 'email', 'phone', 'address', 'neighborhood', 'city', 'zipcode'];
-
+    
     for (const field of required) {
       if (!formData[field].trim()) {
         throw new Error('Por favor, preencha todos os campos obrigatórios.');
@@ -346,12 +356,15 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     try {
       setSubmitting(true);
       setError('');
 
       validateForm();
+
+      const currentSubtotal = getCurrentSubtotal();
+      const currentItems = getCurrentItems();
 
       const orderData = {
         userId: user.id,
@@ -386,11 +399,13 @@ const Checkout = () => {
         await applyCoupon(appliedCoupon.id);
       }
 
+      localStorage.removeItem('checkoutData');
+
       showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
       
       setTimeout(() => {
-        navigate('/compra-realizada', {
-          state: {
+        navigate('/compra-realizada', { 
+          state: { 
             orderCode: order.codigo,
             orderData: orderData
           }
@@ -405,6 +420,7 @@ const Checkout = () => {
       setSubmitting(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -446,7 +462,8 @@ const Checkout = () => {
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
-        onClose={handleCloseToast}/>
+        onClose={handleCloseToast}
+      />
 
       <div className="bg-gray-50 py-8 px-4">
         <div className="container mx-auto">
@@ -478,7 +495,8 @@ const Checkout = () => {
                     showToast('Cupom removido', 'info');
                   }}
                   className="text-red-600 hover:text-red-800 text-sm underline"
-                  disabled={submitting}>
+                  disabled={submitting}
+                >
                   Remover
                 </button>
               </div>
@@ -503,7 +521,8 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}/>
+                        disabled={submitting}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -516,7 +535,8 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}/>
+                        disabled={submitting}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -529,7 +549,8 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}/>
+                        disabled={submitting}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -542,7 +563,8 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}/>
+                        disabled={submitting}
+                      />
                     </div>
                   </div>
                 </div>
@@ -561,7 +583,8 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}/>
+                        disabled={submitting}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -574,7 +597,8 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}/>
+                        disabled={submitting}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -587,7 +611,8 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}/>
+                        disabled={submitting}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -601,12 +626,14 @@ const Checkout = () => {
                           onChange={handleInputChange}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required
-                          disabled={submitting}/>
+                          disabled={submitting}
+                        />
                         <button
                           type="button"
                           onClick={() => handleShippingCalculation(formData.zipcode)}
                           className="px-4 py-2 bg-pink-600 text-white rounded-r-md hover:bg-pink-700 disabled:bg-gray-400"
-                          disabled={submitting}>
+                          disabled={submitting}
+                        >
                           Calcular Frete
                         </button>
                       </div>
@@ -636,12 +663,14 @@ const Checkout = () => {
                       onChange={(e) => setCouponCode(e.target.value)}
                       placeholder="Digite o código do cupom"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                      disabled={submitting || appliedCoupon}/>
+                      disabled={submitting || appliedCoupon}
+                    />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
                       className="px-4 py-2 bg-pink-600 text-white rounded-r-md hover:bg-pink-700 disabled:bg-gray-400"
-                      disabled={submitting || appliedCoupon}>
+                      disabled={submitting || appliedCoupon}
+                    >
                       Aplicar
                     </button>
                   </div>
@@ -649,7 +678,7 @@ const Checkout = () => {
 
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Pagamento</h2>
-
+                  
                   <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Forma de Pagamento</label>
                     <div className="flex space-x-4">
@@ -661,7 +690,8 @@ const Checkout = () => {
                           checked={formData.paymentMethod === 'credit'}
                           onChange={handleInputChange}
                           className="mr-2"
-                          disabled={submitting}/>
+                          disabled={submitting}
+                        />
                         Cartão de Crédito
                       </label>
                       <label className="flex items-center">
@@ -672,7 +702,8 @@ const Checkout = () => {
                           checked={formData.paymentMethod === 'bankSlip'}
                           onChange={handleInputChange}
                           className="mr-2"
-                          disabled={submitting}/>
+                          disabled={submitting}
+                        />
                         Boleto Bancário
                       </label>
                     </div>
@@ -691,7 +722,8 @@ const Checkout = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}/>
+                          disabled={submitting}
+                        />
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1">
@@ -705,7 +737,8 @@ const Checkout = () => {
                           placeholder="0000 0000 0000 0000"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}/>
+                          disabled={submitting}
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1">
@@ -719,7 +752,8 @@ const Checkout = () => {
                           placeholder="MM/AA"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}/>
+                          disabled={submitting}
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1">
@@ -744,7 +778,8 @@ const Checkout = () => {
                   <button
                     type="submit"
                     disabled={submitting || currentItems.length === 0}
-                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
                     {submitting ? 'Processando...' : 'Realizar Pagamento'}
                   </button>
                 </div>
@@ -767,7 +802,8 @@ const Checkout = () => {
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = '../images/products/produc-image-0.png';
-                          }}/>
+                          }}
+                        />
                       </div>
                       <div className="flex-1">
                         <h4 className="text-sm font-medium text-gray-800 line-clamp-2">
@@ -783,7 +819,7 @@ const Checkout = () => {
                     </div>
                   ))}
                   
-                  {cartItems.length > 3 && (
+                  {currentItems.length > 3 && (
                     <div className="text-sm text-gray-500 text-center">
                       +{currentItems.length - 3} outros itens
                     </div>
@@ -797,28 +833,28 @@ const Checkout = () => {
                     <span>Subtotal:</span>
                     <span>R$ {currentSubtotal.toFixed(2).replace('.', ',')}</span>
                   </div>
-
+                  
                   <div className="flex justify-between text-sm">
                     <span>Frete:</span>
                     <span>
                       {shipping === 0 ? 'Grátis' : `R$ ${shipping.toFixed(2).replace('.', ',')}`}
                     </span>
                   </div>
-
+                  
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto:</span>
                       <span>-R$ {discount.toFixed(2).replace('.', ',')}</span>
                     </div>
                   )}
-
+                  
                   <hr className="my-2" />
-
+                  
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
                     <span className="text-pink-600">R$ {total.toFixed(2).replace('.', ',')}</span>
                   </div>
-
+                  
                   <div className="text-xs text-gray-500 text-right">
                     ou 10x de R$ {(total / 10).toFixed(2).replace('.', ',')} sem juros
                   </div>
@@ -829,7 +865,8 @@ const Checkout = () => {
                     type="button"
                     onClick={handleSubmit}
                     disabled={submitting || currentItems.length === 0}
-                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
                     {submitting ? 'Processando...' : 'Realizar Pagamento'}
                   </button>
                 </div>
