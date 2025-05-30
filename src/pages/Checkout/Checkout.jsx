@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, X, ShoppingCart, Info, Plus, CreditCard } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { useUser } from '../../contexts/UserContext';
