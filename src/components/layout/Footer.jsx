@@ -16,7 +16,7 @@ const Footer = () => {
               />
             </div>
             <p className="text-gray-400 mb-6">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore.
+               A Digital Store é sua loja online de produtos esportivos e lifestyle. Oferecemos as melhores marcas com qualidade garantida e entrega rápida para todo o Brasil.
             </p>
             {/* Social Media Icons */}
             <div className="flex space-x-6">
