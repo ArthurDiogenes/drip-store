@@ -20,7 +20,6 @@ import { getFeaturedProducts } from '../../services/productService';
 import { getShippingCost } from '../../services/shippingService';
 import styles from './Cart.module.css';
 
-// Toast Component
 const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 }) => {
   useEffect(() => {
     if (isVisible) {
@@ -99,7 +98,6 @@ const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 
   );
 };
 
-// Confirmation Modal Component
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirmar", type = "danger" }) => {
   if (!isOpen) return null;
 
@@ -434,7 +432,7 @@ const Cart = () => {
     }
   };
 
-  // Handle checkout
+  // FUNÇÃO ATUALIZADA: Handle checkout - agora passa dados do desconto
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       showToast('Seu carrinho está vazio. Adicione produtos antes de finalizar a compra.', 'error');
@@ -453,26 +451,45 @@ const Cart = () => {
       return;
     }
 
-    // Store cart summary for checkout
     const checkoutData = {
       items: cartItems,
       subtotal,
-      discount,
+      discount, // Passa o desconto aplicado
       shipping,
       total: subtotal + shipping - discount,
-      appliedCoupon,
+      appliedCoupon, // Passa os dados do cupom aplicado
       shippingInfo
     };
 
     console.log('Proceeding to checkout with data:', checkoutData);
+    
+    // NOVO: Salvar dados no localStorage como backup
+    try {
+      localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+    } catch (err) {
+      console.error('Error saving checkout data to localStorage:', err);
+    }
+    
     showToast('Redirecionando para o checkout...', 'info');
     
     setTimeout(() => {
-      navigate('/checkout', { state: { checkoutData } });
+      // Passa os dados via state do React Router
+      navigate('/checkout', { 
+        state: { 
+          checkoutData: checkoutData,
+          // Para compatibilidade, também passa separadamente
+          cartItems,
+          subtotal,
+          discount,
+          shipping,
+          appliedCoupon,
+          shippingInfo
+        }
+      });
     }, 1000);
   };
 
-  // Handle clear cart with confirmation
+  // Handle clear cart with confirmation (mantido igual)
   const handleClearCart = async () => {
     if (!cartId || cartItems.length === 0) return;
 
@@ -511,6 +528,9 @@ const Cart = () => {
     );
   };
 
+  // O resto do componente permanece igual...
+  // Loading state, render, etc.
+  
   // Loading state
   if (loading) {
     return (

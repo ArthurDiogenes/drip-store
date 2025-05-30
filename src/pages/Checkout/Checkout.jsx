@@ -1,6 +1,5 @@
-// src/pages/Checkout/Checkout.jsx - VERSÃO ATUALIZADA SEM ALERTS
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, X, ShoppingCart, Info } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { useUser } from '../../contexts/UserContext';
@@ -11,7 +10,6 @@ import { validateCoupon, applyCoupon } from '../../services/couponService';
 import { getShippingCost } from '../../services/shippingService';
 import styles from './Checkout.module.css';
 
-// Toast Component
 const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 }) => {
   useEffect(() => {
     if (isVisible) {
@@ -92,23 +90,22 @@ const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile } = useUser();
   const { cartItems, cartSubtotal } = useCart();
 
-  // Form states
+  const [checkoutData, setCheckoutData] = useState(null);
+
   const [formData, setFormData] = useState({
-    // Personal info
     fullName: '',
     cpf: '',
     email: '',
     phone: '',
-    // Shipping info
     address: '',
     neighborhood: '',
     city: '',
     zipcode: '',
     complement: '',
-    // Payment info
     paymentMethod: 'credit',
     cardName: '',
     cardNumber: '',
@@ -116,26 +113,22 @@ const Checkout = () => {
     cvv: ''
   });
 
-  // Checkout states
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   
-  // Pricing states
   const [discount, setDiscount] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [shippingCalculated, setShippingCalculated] = useState(false);
 
-  // Toast state
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
     type: 'success'
   });
 
-  // Toast helpers
   const showToast = (message, type = 'success') => {
     setToast({
       isVisible: true,
@@ -148,32 +141,67 @@ const Checkout = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  // Load user data and cart
   useEffect(() => {
-    const loadCheckoutData = async () => {
+    const loadCheckoutData = () => {
+      try {
+        let data = location.state?.checkoutData;
+        
+        if (!data) {
+          const storedData = localStorage.getItem('checkoutData');
+          if (storedData) {
+            data = JSON.parse(storedData);
+          }
+        }
+        
+        if (data) {
+          setCheckoutData(data);
+          
+          if (data.discount > 0) {
+            setDiscount(data.discount);
+            setAppliedCoupon(data.appliedCoupon);
+            
+            if (data.appliedCoupon?.code) {
+              setCouponCode(data.appliedCoupon.code);
+            }
+          }
+          
+          if (data.shipping >= 0) {
+            setShipping(data.shipping);
+            setShippingCalculated(true);
+          }
+          
+          console.log('Checkout data loaded:', data);
+        }
+      } catch (err) {
+        console.error('Error loading checkout data:', err);
+      }
+    };
+
+    loadCheckoutData();
+  }, [location.state]);
+
+  useEffect(() => {
+    const loadUserAndCartData = async () => {
       try {
         setLoading(true);
         setError('');
 
-        // Check if user is logged in
         if (!user) {
           navigate('/login');
           return;
         }
 
-        // Check if cart has items
-        if (!cartItems || cartItems.length === 0) {
+        const itemsToCheck = checkoutData?.items || cartItems;
+        if (!itemsToCheck || itemsToCheck.length === 0) {
           navigate('/carrinho');
           return;
         }
 
-        // Load user profile data
         let userProfile = profile;
         if (!userProfile) {
           userProfile = await getUserProfile(user.id);
         }
 
-        // Pre-fill form with user data
         if (userProfile) {
           setFormData(prev => ({
             ...prev,
@@ -188,12 +216,10 @@ const Checkout = () => {
             complement: userProfile.complemento || ''
           }));
 
-          // Auto-calculate shipping if CEP is available
-          if (userProfile.cep) {
+          if (userProfile.cep && !shippingCalculated) {
             handleShippingCalculation(userProfile.cep);
           }
         } else {
-          // Fill with user email at least
           setFormData(prev => ({
             ...prev,
             email: user.email || ''
@@ -208,10 +234,11 @@ const Checkout = () => {
       }
     };
 
-    loadCheckoutData();
-  }, [user, profile, cartItems, navigate]);
+    if (user !== undefined) {
+      loadUserAndCartData();
+    }
+  }, [user, profile, navigate, checkoutData, shippingCalculated]);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -220,7 +247,6 @@ const Checkout = () => {
     }));
   };
 
-  // Handle coupon application - NO MORE ALERTS
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
       showToast('Digite um código de cupom.', 'error');
@@ -228,16 +254,16 @@ const Checkout = () => {
     }
 
     try {
-      const result = await validateCoupon(couponCode, cartSubtotal);
+      const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
+      const result = await validateCoupon(couponCode, currentSubtotal);
       
       if (result.isValid) {
         setAppliedCoupon(result.coupon);
         setDiscount(result.coupon.discountValue);
         showToast(`Cupom "${result.coupon.code}" aplicado com sucesso!`, 'success');
         
-        // Recalculate shipping if free shipping coupon
         if (result.coupon.freeShipping && formData.zipcode) {
-          const shippingResult = await getShippingCost(formData.zipcode, cartSubtotal, true);
+          const shippingResult = await getShippingCost(formData.zipcode, currentSubtotal, true);
           setShipping(shippingResult.cost);
         }
       } else {
@@ -249,7 +275,6 @@ const Checkout = () => {
     }
   };
 
-  // Handle shipping calculation - NO MORE ALERTS
   const handleShippingCalculation = async (zipCode) => {
     if (!zipCode || zipCode.replace(/\D/g, '').length !== 8) {
       showToast('Digite um CEP válido.', 'error');
@@ -257,8 +282,9 @@ const Checkout = () => {
     }
 
     try {
+      const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
       const freeShipping = appliedCoupon?.freeShipping || false;
-      const result = await getShippingCost(zipCode, cartSubtotal, freeShipping);
+      const result = await getShippingCost(zipCode, currentSubtotal, freeShipping);
       
       setShipping(result.cost);
       setShippingCalculated(true);
@@ -274,10 +300,16 @@ const Checkout = () => {
     }
   };
 
-  // Calculate total
-  const total = cartSubtotal + shipping - discount;
+  const getCurrentSubtotal = () => {
+    return checkoutData?.subtotal || cartSubtotal || 0;
+  };
 
-  // Form validation
+  const getCurrentItems = () => {
+    return checkoutData?.items || cartItems || [];
+  };
+
+  const total = getCurrentSubtotal() + shipping - discount;
+
   const validateForm = () => {
     const required = ['fullName', 'cpf', 'email', 'phone', 'address', 'neighborhood', 'city', 'zipcode'];
     
@@ -287,25 +319,21 @@ const Checkout = () => {
       }
     }
 
-    // Validate CPF
     const cpfNumbers = formData.cpf.replace(/\D/g, '');
     if (cpfNumbers.length !== 11) {
       throw new Error('CPF deve ter 11 dígitos.');
     }
 
-    // Validate phone
     const phoneNumbers = formData.phone.replace(/\D/g, '');
     if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
       throw new Error('Número de telefone inválido.');
     }
 
-    // Validate CEP
     const cepNumbers = formData.zipcode.replace(/\D/g, '');
     if (cepNumbers.length !== 8) {
       throw new Error('CEP deve ter 8 dígitos.');
     }
 
-    // Validate payment method
     if (formData.paymentMethod === 'credit') {
       if (!formData.cardName.trim()) {
         throw new Error('Nome do cartão é obrigatório.');
@@ -321,13 +349,11 @@ const Checkout = () => {
       }
     }
 
-    // Check if shipping was calculated
     if (!shippingCalculated) {
       throw new Error('Por favor, calcule o frete antes de finalizar.');
     }
   };
 
-  // Handle form submission - NO MORE ALERTS
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -335,13 +361,14 @@ const Checkout = () => {
       setSubmitting(true);
       setError('');
 
-      // Validate form
       validateForm();
 
-      // Prepare order data
+      const currentSubtotal = getCurrentSubtotal();
+      const currentItems = getCurrentItems();
+
       const orderData = {
         userId: user.id,
-        subtotal: cartSubtotal,
+        subtotal: currentSubtotal,
         shipping: shipping,
         discount: discount,
         total: total,
@@ -351,13 +378,13 @@ const Checkout = () => {
           endereco: formData.address,
           bairro: formData.neighborhood,
           cidade: formData.city,
-          estado: 'CE', // Default - could be made dynamic
+          estado: 'CE',
           cep: formData.zipcode.replace(/\D/g, ''),
           complemento: formData.complement
         },
-        items: cartItems.map(item => ({
+        items: currentItems.map(item => ({
           produto_id: item.produto.id,
-          variacao_id: null, // Simplified for now
+          variacao_id: null,
           quantidade: item.quantidade,
           preco_unitario: item.produto.precoAtual
         }))
@@ -365,19 +392,17 @@ const Checkout = () => {
 
       console.log('Creating order with data:', orderData);
 
-      // Create order
       const order = await createOrder(orderData);
       console.log('Order created successfully:', order);
 
-      // Apply coupon if used
       if (appliedCoupon) {
         await applyCoupon(appliedCoupon.id);
       }
 
-      // Show success toast instead of alert
+      localStorage.removeItem('checkoutData');
+
       showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
       
-      // Navigate to success page after a brief delay
       setTimeout(() => {
         navigate('/compra-realizada', { 
           state: { 
@@ -396,7 +421,6 @@ const Checkout = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <Layout>
@@ -428,15 +452,16 @@ const Checkout = () => {
     );
   }
 
+  const currentItems = getCurrentItems();
+  const currentSubtotal = getCurrentSubtotal();
+
   return (
     <Layout>
-      {/* Toast Notification */}
       <Toast
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
-        onClose={handleCloseToast}
-      />
+        onClose={handleCloseToast}/>
 
       <div className="bg-gray-50 py-8 px-4">
         <div className="container mx-auto">
@@ -448,12 +473,37 @@ const Checkout = () => {
             </div>
           )}
 
+          {appliedCoupon && discount > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-green-800">
+                    ✅ Cupom Aplicado: "{appliedCoupon.code}"
+                  </h4>
+                  <p className="text-xs text-green-600 mt-1">
+                    Desconto: R$ {discount.toFixed(2).replace('.', ',')}
+                    {appliedCoupon.freeShipping && ' + Frete Grátis'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setAppliedCoupon(null);
+                    setDiscount(0);
+                    setCouponCode('');
+                    showToast('Cupom removido', 'info');
+                  }}
+                  className="text-red-600 hover:text-red-800 text-sm underline"
+                  disabled={submitting}>
+                  Remover
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Form Section */}
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-md p-6 space-y-8">
                 
-                {/* Personal Information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações Pessoais</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -468,8 +518,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}
-                      />
+                        disabled={submitting}/>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -482,8 +531,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}
-                      />
+                        disabled={submitting}/>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -496,8 +544,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}
-                      />
+                        disabled={submitting}/>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -510,13 +557,11 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}
-                      />
+                        disabled={submitting}/>
                     </div>
                   </div>
                 </div>
 
-                {/* Shipping Information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Entrega</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -531,8 +576,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}
-                      />
+                        disabled={submitting}/>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -545,8 +589,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}
-                      />
+                        disabled={submitting}/>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -559,8 +602,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                         required
-                        disabled={submitting}
-                      />
+                        disabled={submitting}/>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -574,14 +616,12 @@ const Checkout = () => {
                           onChange={handleInputChange}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required
-                          disabled={submitting}
-                        />
+                          disabled={submitting}/>
                         <button
                           type="button"
                           onClick={() => handleShippingCalculation(formData.zipcode)}
                           className="px-4 py-2 bg-pink-600 text-white rounded-r-md hover:bg-pink-700 disabled:bg-gray-400"
-                          disabled={submitting}
-                        >
+                          disabled={submitting}>
                           Calcular Frete
                         </button>
                       </div>
@@ -612,22 +652,15 @@ const Checkout = () => {
                       onChange={(e) => setCouponCode(e.target.value)}
                       placeholder="Digite o código do cupom"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                      disabled={submitting}
-                    />
+                      disabled={submitting || appliedCoupon}/>
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
                       className="px-4 py-2 bg-pink-600 text-white rounded-r-md hover:bg-pink-700 disabled:bg-gray-400"
-                      disabled={submitting}
-                    >
+                      disabled={submitting || appliedCoupon}>
                       Aplicar
                     </button>
                   </div>
-                  {appliedCoupon && (
-                    <div className="mt-2 text-sm text-green-600">
-                      ✅ Cupom "{appliedCoupon.code}" aplicado - Desconto: R$ {discount.toFixed(2).replace('.', ',')}
-                    </div>
-                  )}
                 </div>
 
                 {/* Payment Information */}
@@ -646,8 +679,7 @@ const Checkout = () => {
                           checked={formData.paymentMethod === 'credit'}
                           onChange={handleInputChange}
                           className="mr-2"
-                          disabled={submitting}
-                        />
+                          disabled={submitting}/>
                         Cartão de Crédito
                       </label>
                       <label className="flex items-center">
@@ -658,8 +690,7 @@ const Checkout = () => {
                           checked={formData.paymentMethod === 'bankSlip'}
                           onChange={handleInputChange}
                           className="mr-2"
-                          disabled={submitting}
-                        />
+                          disabled={submitting}/>
                         Boleto Bancário
                       </label>
                     </div>
@@ -679,8 +710,7 @@ const Checkout = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}
-                        />
+                          disabled={submitting}/>
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1">
@@ -694,8 +724,7 @@ const Checkout = () => {
                           placeholder="0000 0000 0000 0000"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}
-                        />
+                          disabled={submitting}/>
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1">
@@ -709,8 +738,7 @@ const Checkout = () => {
                           placeholder="MM/AA"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                           required={formData.paymentMethod === 'credit'}
-                          disabled={submitting}
-                        />
+                          disabled={submitting}/>
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1">
@@ -731,13 +759,11 @@ const Checkout = () => {
                   )}
                 </div>
 
-                {/* Submit Button - Mobile */}
                 <div className="md:hidden">
                   <button
                     type="submit"
-                    disabled={submitting || cartItems.length === 0}
-                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
+                    disabled={submitting || currentItems.length === 0}
+                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed">
                     {submitting ? 'Processando...' : 'Realizar Pagamento'}
                   </button>
                 </div>
@@ -745,14 +771,12 @@ const Checkout = () => {
               </form>
             </div>
 
-            {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-md p-6 sticky top-4">
                 <h2 className="text-lg font-semibold mb-4">Resumo do Pedido</h2>
 
-                {/* Cart Items */}
                 <div className="space-y-3">
-                  {cartItems.slice(0, 3).map((item) => (
+                  {currentItems.slice(0, 3).map((item) => (
                     <div key={item.id} className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden">
                         <img
@@ -762,8 +786,7 @@ const Checkout = () => {
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = '../images/products/produc-image-0.png';
-                          }}
-                        />
+                          }}/>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-sm font-medium text-gray-800 line-clamp-2">
@@ -779,20 +802,19 @@ const Checkout = () => {
                     </div>
                   ))}
                   
-                  {cartItems.length > 3 && (
+                  {currentItems.length > 3 && (
                     <div className="text-sm text-gray-500 text-center">
-                      +{cartItems.length - 3} outros itens
+                      +{currentItems.length - 3} outros itens
                     </div>
                   )}
                 </div>
 
                 <hr className="my-4" />
 
-                {/* Pricing Summary */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal:</span>
-                    <span>R$ {cartSubtotal.toFixed(2).replace('.', ',')}</span>
+                    <span>R$ {currentSubtotal.toFixed(2).replace('.', ',')}</span>
                   </div>
                   
                   <div className="flex justify-between text-sm">
@@ -821,19 +843,16 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Submit Button - Desktop */}
                 <div className="hidden md:block mt-6">
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={submitting || cartItems.length === 0}
-                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
+                    disabled={submitting || currentItems.length === 0}
+                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed">
                     {submitting ? 'Processando...' : 'Realizar Pagamento'}
                   </button>
                 </div>
 
-                {/* Payment Info */}
                 <div className="mt-4 text-xs text-gray-500 text-center">
                   🔒 Suas informações estão seguras e protegidas
                 </div>
