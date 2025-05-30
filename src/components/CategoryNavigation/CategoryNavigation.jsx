@@ -42,36 +42,36 @@ const CategoryNavigation = ({ categories = [] }) => {
     {
       id: 1,
       name: "Camisetas",
-      normalIcon: "../src/assets/icons/icon-category-tshirt.svg",
-      hoverIcon: "../src/assets/icons/icon-category-tshirt.mim.svg", // SVG já colorido em rosa
+      normalIcon: "/icons/icon-category-tshirt.svg",
+      hoverIcon: "/icons/icon-category-tshirt.mim.svg", // SVG já colorido em rosa
       link: "/categorias/camisetas"
     },
     {
       id: 2,
       name: "Calças",
-      normalIcon: "../src/assets/icons/icon-category-pants.svg",
-      hoverIcon: "../src/assets/icons/icon-category-pants.min.svg", // SVG já colorido em rosa
+      normalIcon: "/icons/icon-category-pants.svg",
+      hoverIcon: "/icons/icon-category-pants.min.svg", // SVG já colorido em rosa
       link: "/categorias/calcas"
     },
     {
       id: 3,
       name: "Bonés",
-      normalIcon: "../src/assets/icons/icon-category-cap.svg",
-      hoverIcon: "../src/assets/icons/icon-category-cap.min.svg", // SVG já colorido em rosa
+      normalIcon: "/icons/icon-category-cap.svg",
+      hoverIcon: "/icons/icon-category-cap.min.svg", // SVG já colorido em rosa
       link: "/categorias/bones"
     },
     {
       id: 4,
       name: "Headphones",
-      normalIcon: "../src/assets/icons/icon-category-headphones.svg",
-      hoverIcon: "../src/assets/icons/icon-category-headphones.min.svg", // SVG já colorido em rosa
+      normalIcon: "/icons/icon-category-headphones.svg",
+      hoverIcon: "/icons/icon-category-headphones.min.svg", // SVG já colorido em rosa
       link: "/categorias/headphones"
     },
     {
       id: 5,
       name: "Tênis",
-      normalIcon: "../src/assets/icons/icon-category-sneakers.svg",
-      hoverIcon: "../src/assets/icons/icon-category-sneakers.min.svg", // SVG já colorido em rosa
+      normalIcon: "/icons/icon-category-sneakers.svg",
+      hoverIcon: "/icons/icon-category-sneakers.min.svg", // SVG já colorido em rosa
       link: "/categorias/tenis"
     }
   ];

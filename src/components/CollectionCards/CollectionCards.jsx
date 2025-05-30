@@ -47,21 +47,21 @@ const CollectionCards = ({ collections = [] }) => {
     {
       id: 1,
       discount: "30",
-      imageUrl: "../images/collections/collection-1.png",
+      imageUrl: "/images/collections/collection-1.png",
       buttonText: "Ver coleção",
       link: "/colecoes/supreme"
     },
     {
       id: 2,
       discount: "30",
-      imageUrl: "../images/collections/collection-2.png",
+      imageUrl: "/images/collections/collection-2.png",
       buttonText: "Ver coleção",
       link: "/colecoes/adidas"
     },
     {
       id: 3,
       discount: "30",
-      imageUrl: "../images/collections/collection-3.png",
+      imageUrl: "/images/collections/collection-3.png",
       buttonText: "Ver coleção",
       link: "/colecoes/beats"
     }
