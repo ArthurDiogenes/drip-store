@@ -1,4 +1,3 @@
-/* src/pages/Auth/Register.module.css */
 .registerContainer {
   display: flex;
   width: 100%;
@@ -128,13 +127,13 @@
     align-items: center;
     padding: 2rem;
   }
-  
+
   .productImage {
     display: block;
     width: 50%;
     max-width: 550px;
   }
-  
+
   .productImage img {
     width: 100%;
     height: auto;

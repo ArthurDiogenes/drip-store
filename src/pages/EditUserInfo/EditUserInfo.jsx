@@ -1,4 +1,3 @@
-// src/pages/EditUserInfo/EditUserInfo.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
@@ -10,7 +9,7 @@ import styles from './EditUserInfo.module.css';
 const EditUserInfo = () => {
   const { user, profile, setProfile } = useUser();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     nome_completo: '',
     cpf: '',
@@ -23,13 +22,12 @@ const EditUserInfo = () => {
     complemento: '',
     receber_ofertas: false
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  // Load current user profile data
   useEffect(() => {
     const loadUserProfile = async () => {
       if (!user) {
@@ -42,8 +40,7 @@ const EditUserInfo = () => {
         setError(null);
 
         let profileData = profile;
-        
-        // If profile not in context, fetch it
+
         if (!profileData) {
           profileData = await getUserProfile(user.id);
         }
@@ -73,7 +70,6 @@ const EditUserInfo = () => {
     loadUserProfile();
   }, [user, profile, navigate]);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -82,7 +78,6 @@ const EditUserInfo = () => {
     }));
   };
 
-  // Format CPF input
   const formatCPF = (value) => {
     const numericValue = value.replace(/\D/g, '');
     if (numericValue.length <= 3) {
@@ -96,7 +91,6 @@ const EditUserInfo = () => {
     }
   };
 
-  // Format phone number
   const formatPhone = (value) => {
     const numericValue = value.replace(/\D/g, '');
     if (numericValue.length <= 2) {
@@ -108,7 +102,6 @@ const EditUserInfo = () => {
     }
   };
 
-  // Format CEP
   const formatCEP = (value) => {
     const numericValue = value.replace(/\D/g, '');
     if (numericValue.length <= 5) {
@@ -118,7 +111,6 @@ const EditUserInfo = () => {
     }
   };
 
-  // Handle special formatted inputs
   const handleFormattedInput = (e) => {
     const { name, value } = e.target;
     let formattedValue = value;
@@ -137,16 +129,14 @@ const EditUserInfo = () => {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!user) return;
 
     setError(null);
     setSuccess(false);
 
-    // Validate required fields
     const requiredFields = ['nome_completo', 'cpf', 'celular', 'endereco', 'bairro', 'cidade', 'estado', 'cep'];
     for (const field of requiredFields) {
       if (!formData[field] || !formData[field].toString().trim()) {
@@ -155,21 +145,18 @@ const EditUserInfo = () => {
       }
     }
 
-    // Validate CPF format
     const cpfNumbers = formData.cpf.replace(/\D/g, '');
     if (cpfNumbers.length !== 11) {
       setError('CPF deve ter 11 dígitos.');
       return;
     }
 
-    // Validate phone format
     const phoneNumbers = formData.celular.replace(/\D/g, '');
     if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
       setError('Número de celular inválido.');
       return;
     }
 
-    // Validate CEP format
     const cepNumbers = formData.cep.replace(/\D/g, '');
     if (cepNumbers.length !== 8) {
       setError('CEP deve ter 8 dígitos.');
@@ -179,7 +166,6 @@ const EditUserInfo = () => {
     try {
       setSaving(true);
 
-      // Prepare data for update (remove formatting)
       const updateData = {
         nome_completo: formData.nome_completo.trim(),
         cpf: formData.cpf.replace(/\D/g, ''),
@@ -194,13 +180,11 @@ const EditUserInfo = () => {
       };
 
       await updateUserProfile(user.id, updateData);
-      
-      // Update context with new profile data
+
       setProfile({ ...updateData, id: user.id });
-      
+
       setSuccess(true);
-      
-      // Redirect back to user info page after successful update
+
       setTimeout(() => {
         navigate('/minhas-informacoes');
       }, 2000);
@@ -242,23 +226,19 @@ const EditUserInfo = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className={styles.editUserInfoPage}>
-          {/* Account Sidebar */}
           <div className={styles.sidebarContainer}>
             <AccountSidebar />
           </div>
-          
-          {/* Edit Form Content */}
+
           <div className={styles.contentContainer}>
             <h1 className={styles.pageTitle}>Editar Informações</h1>
-            
-            {/* Success Message */}
+
             {success && (
               <div className="bg-green-50 text-green-600 p-3 rounded-md mb-4 text-sm">
                 Informações atualizadas com sucesso! Redirecionando...
               </div>
             )}
 
-            {/* Error Message */}
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
                 {error}
@@ -267,7 +247,6 @@ const EditUserInfo = () => {
 
             <div className={styles.formCard}>
               <form onSubmit={handleSubmit} className={styles.form}>
-                {/* Personal Information Section */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>Informações Pessoais</h2>
                   <div className={styles.separator}></div>
@@ -340,7 +319,6 @@ const EditUserInfo = () => {
                   </div>
                 </div>
 
-                {/* Delivery Information Section */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>Informações de Entrega</h2>
                   <div className={styles.separator}></div>
@@ -470,7 +448,6 @@ const EditUserInfo = () => {
                   </div>
                 </div>
 
-                {/* Marketing Preferences */}
                 <div className={styles.section}>
                   <h2 className={styles.sectionTitle}>Preferências</h2>
                   <div className={styles.separator}></div>
@@ -491,7 +468,6 @@ const EditUserInfo = () => {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className={styles.actionButtons}>
                   <button
                     type="button"

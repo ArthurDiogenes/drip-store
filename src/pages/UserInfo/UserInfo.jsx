@@ -1,4 +1,3 @@
-// src/pages/UserInfo/UserInfo.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/layout/Layout';
@@ -15,7 +14,6 @@ const UserInfo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load user profile data
   useEffect(() => {
     const loadUserProfile = async () => {
       if (!user) {
@@ -27,11 +25,9 @@ const UserInfo = () => {
         setLoading(true);
         setError(null);
 
-        // First try to use the profile from context
         if (profile) {
           setUserProfile(profile);
         } else {
-          // If not available in context, fetch it directly
           const profileData = await getUserProfile(user.id);
           if (profileData) {
             setUserProfile(profileData);
@@ -50,20 +46,15 @@ const UserInfo = () => {
     loadUserProfile();
   }, [user, profile]);
 
-  // Format functions for display
   const formatCPF = (cpf) => {
     if (!cpf) return 'Não informado';
-    // Remove any existing formatting
     const numbers = cpf.replace(/\D/g, '');
-    // Format as XXX.XXX.XXX-XX
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   const formatPhone = (phone) => {
     if (!phone) return 'Não informado';
-    // Remove any existing formatting
     const numbers = phone.replace(/\D/g, '');
-    // Format as (XX) XXXXX-XXXX or (XX) XXXX-XXXX
     if (numbers.length === 11) {
       return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     } else if (numbers.length === 10) {
@@ -74,20 +65,16 @@ const UserInfo = () => {
 
   const formatCEP = (cep) => {
     if (!cep) return 'Não informado';
-    // Remove any existing formatting
     const numbers = cep.replace(/\D/g, '');
-    // Format as XXXXX-XXX
     return numbers.replace(/(\d{5})(\d{3})/, '$1-$2');
   };
 
-  // Edit button component
   const EditButton = () => (
     <Link to="/editar-informacoes" className={styles.editButton}>
       Editar
     </Link>
   );
 
-  // Loading state
   if (userLoading || loading) {
     return (
       <Layout>
@@ -125,7 +112,6 @@ const UserInfo = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Layout>
@@ -152,7 +138,6 @@ const UserInfo = () => {
     );
   }
 
-  // No profile data
   if (!userProfile) {
     return (
       <Layout>
@@ -188,78 +173,73 @@ const UserInfo = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className={styles.userInfoPage}>
-          {/* Account Sidebar */}
           <div className={styles.sidebarContainer}>
             <AccountSidebar />
           </div>
-          
-          {/* User Information Content */}
+
           <div className={styles.contentContainer}>
             <h1 className={styles.pageTitle}>Minhas Informações</h1>
-            
-            {/* Personal Information Section */}
-            <UserInfoSection 
-              title="Informações Pessoais" 
+
+            <UserInfoSection
+              title="Informações Pessoais"
               actionButton={<EditButton />}
             >
-              <UserInfoItem 
-                label="Nome" 
-                value={userProfile.nome_completo || 'Não informado'} 
+              <UserInfoItem
+                label="Nome"
+                value={userProfile.nome_completo || 'Não informado'}
               />
-              <UserInfoItem 
-                label="CPF" 
-                value={formatCPF(userProfile.cpf)} 
+              <UserInfoItem
+                label="CPF"
+                value={formatCPF(userProfile.cpf)}
               />
-              <UserInfoItem 
-                label="Email" 
-                value={user?.email || 'Não informado'} 
+              <UserInfoItem
+                label="Email"
+                value={user?.email || 'Não informado'}
               />
-              <UserInfoItem 
-                label="Celular" 
-                value={formatPhone(userProfile.celular)} 
+              <UserInfoItem
+                label="Celular"
+                value={formatPhone(userProfile.celular)}
               />
             </UserInfoSection>
-            
-            {/* Delivery Information Section */}
-            <UserInfoSection 
+
+            <UserInfoSection
               title="Informações de Entrega"
               actionButton={<EditButton />}
             >
-              <UserInfoItem 
-                label="Endereço" 
-                value={userProfile.endereco || 'Não informado'} 
+              <UserInfoItem
+                label="Endereço"
+                value={userProfile.endereco || 'Não informado'}
               />
-              <UserInfoItem 
-                label="Bairro" 
-                value={userProfile.bairro || 'Não informado'} 
+              <UserInfoItem
+                label="Bairro"
+                value={userProfile.bairro || 'Não informado'}
               />
-              <UserInfoItem 
-                label="Cidade" 
-                value={userProfile.cidade && userProfile.estado 
-                  ? `${userProfile.cidade}, ${userProfile.estado}` 
+              <UserInfoItem
+                label="Cidade"
+                value={userProfile.cidade && userProfile.estado
+                  ? `${userProfile.cidade}, ${userProfile.estado}`
                   : 'Não informado'
-                } 
+                }
               />
-              <UserInfoItem 
-                label="CEP" 
-                value={formatCEP(userProfile.cep)} 
+              <UserInfoItem
+                label="CEP"
+                value={formatCEP(userProfile.cep)}
               />
               {userProfile.complemento && (
-                <UserInfoItem 
-                  label="Complemento" 
-                  value={userProfile.complemento} 
+                <UserInfoItem
+                  label="Complemento"
+                  value={userProfile.complemento}
                 />
               )}
             </UserInfoSection>
 
-            {/* Marketing Preferences Section */}
-            <UserInfoSection 
+            <UserInfoSection
               title="Preferências de Marketing"
               actionButton={<EditButton />}
             >
-              <UserInfoItem 
-                label="Receber ofertas" 
-                value={userProfile.receber_ofertas ? 'Sim' : 'Não'} 
+              <UserInfoItem
+                label="Receber ofertas"
+                value={userProfile.receber_ofertas ? 'Sim' : 'Não'}
               />
             </UserInfoSection>
           </div>

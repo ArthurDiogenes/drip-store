@@ -94,8 +94,7 @@ const Checkout = () => {
   const { user, profile } = useUser();
   const { cartItems, cartSubtotal } = useCart();
 
-  const [checkoutData, setCheckoutData] = useState(null);
-
+  // Form states
   const [formData, setFormData] = useState({
     fullName: '',
     cpf: '',
@@ -117,6 +116,7 @@ const Checkout = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   
+  // Pricing states
   const [discount, setDiscount] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [couponCode, setCouponCode] = useState('');
@@ -191,8 +191,8 @@ const Checkout = () => {
           return;
         }
 
-        const itemsToCheck = checkoutData?.items || cartItems;
-        if (!itemsToCheck || itemsToCheck.length === 0) {
+        // Check if cart has items
+        if (!cartItems || cartItems.length === 0) {
           navigate('/carrinho');
           return;
         }
@@ -216,7 +216,8 @@ const Checkout = () => {
             complement: userProfile.complemento || ''
           }));
 
-          if (userProfile.cep && !shippingCalculated) {
+          // Auto-calculate shipping if CEP is available
+          if (userProfile.cep) {
             handleShippingCalculation(userProfile.cep);
           }
         } else {
@@ -254,14 +255,14 @@ const Checkout = () => {
     }
 
     try {
-      const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
-      const result = await validateCoupon(couponCode, currentSubtotal);
+      const result = await validateCoupon(couponCode, cartSubtotal);
       
       if (result.isValid) {
         setAppliedCoupon(result.coupon);
         setDiscount(result.coupon.discountValue);
         showToast(`Cupom "${result.coupon.code}" aplicado com sucesso!`, 'success');
         
+        // Recalculate shipping if free shipping coupon
         if (result.coupon.freeShipping && formData.zipcode) {
           const shippingResult = await getShippingCost(formData.zipcode, currentSubtotal, true);
           setShipping(shippingResult.cost);
@@ -284,15 +285,15 @@ const Checkout = () => {
     try {
       const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
       const freeShipping = appliedCoupon?.freeShipping || false;
-      const result = await getShippingCost(zipCode, currentSubtotal, freeShipping);
+      const result = await getShippingCost(zipCode, cartSubtotal, freeShipping);
       
       setShipping(result.cost);
       setShippingCalculated(true);
-      
-      const message = result.isFree 
+
+      const message = result.isFree
         ? `Frete grátis! Entrega em ${result.deliveryTime}`
         : `Frete: R$ ${result.cost.toFixed(2).replace('.', ',')} - Entrega em ${result.deliveryTime}`;
-      
+
       showToast(message, 'success');
     } catch (error) {
       console.error('Error calculating shipping:', error);
@@ -300,19 +301,12 @@ const Checkout = () => {
     }
   };
 
-  const getCurrentSubtotal = () => {
-    return checkoutData?.subtotal || cartSubtotal || 0;
-  };
-
-  const getCurrentItems = () => {
-    return checkoutData?.items || cartItems || [];
-  };
-
-  const total = getCurrentSubtotal() + shipping - discount;
+  // Calculate total
+  const total = cartSubtotal + shipping - discount;
 
   const validateForm = () => {
     const required = ['fullName', 'cpf', 'email', 'phone', 'address', 'neighborhood', 'city', 'zipcode'];
-    
+
     for (const field of required) {
       if (!formData[field].trim()) {
         throw new Error('Por favor, preencha todos os campos obrigatórios.');
@@ -356,16 +350,14 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setSubmitting(true);
       setError('');
 
       validateForm();
 
-      const currentSubtotal = getCurrentSubtotal();
-      const currentItems = getCurrentItems();
-
+      // Prepare order data
       const orderData = {
         userId: user.id,
         subtotal: currentSubtotal,
@@ -399,13 +391,13 @@ const Checkout = () => {
         await applyCoupon(appliedCoupon.id);
       }
 
-      localStorage.removeItem('checkoutData');
-
+      // Show success toast instead of alert
       showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
       
+      // Navigate to success page after a brief delay
       setTimeout(() => {
-        navigate('/compra-realizada', { 
-          state: { 
+        navigate('/compra-realizada', {
+          state: {
             orderCode: order.codigo,
             orderData: orderData
           }
@@ -504,6 +496,7 @@ const Checkout = () => {
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-md p-6 space-y-8">
                 
+                {/* Personal Information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações Pessoais</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -642,7 +635,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Coupon Section */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Cupom de Desconto</h2>
                   <div className="flex max-w-md">
@@ -663,11 +655,9 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Payment Information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Pagamento</h2>
-                  
-                  {/* Payment Method Selection */}
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Forma de Pagamento</label>
                     <div className="flex space-x-4">
@@ -696,7 +686,6 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {/* Credit Card Fields */}
                   {formData.paymentMethod === 'credit' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
@@ -802,7 +791,7 @@ const Checkout = () => {
                     </div>
                   ))}
                   
-                  {currentItems.length > 3 && (
+                  {cartItems.length > 3 && (
                     <div className="text-sm text-gray-500 text-center">
                       +{currentItems.length - 3} outros itens
                     </div>
@@ -816,28 +805,28 @@ const Checkout = () => {
                     <span>Subtotal:</span>
                     <span>R$ {currentSubtotal.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>Frete:</span>
                     <span>
                       {shipping === 0 ? 'Grátis' : `R$ ${shipping.toFixed(2).replace('.', ',')}`}
                     </span>
                   </div>
-                  
+
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto:</span>
                       <span>-R$ {discount.toFixed(2).replace('.', ',')}</span>
                     </div>
                   )}
-                  
+
                   <hr className="my-2" />
-                  
+
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
                     <span className="text-pink-600">R$ {total.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  
+
                   <div className="text-xs text-gray-500 text-right">
                     ou 10x de R$ {(total / 10).toFixed(2).replace('.', ',')} sem juros
                   </div>

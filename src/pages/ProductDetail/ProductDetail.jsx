@@ -1,4 +1,3 @@
-// pages/ProductDetail/ProductDetail.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, X, ShoppingCart } from 'lucide-react';
@@ -14,7 +13,6 @@ import { getProductBySlug, getRelatedProducts } from '../../services/productServ
 import { useUser } from '../../contexts/UserContext';
 import styles from './ProductDetail.module.css';
 
-// Toast Component
 const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 }) => {
   useEffect(() => {
     if (isVisible) {
@@ -94,29 +92,25 @@ const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 
 };
 
 const ProductDetail = () => {
-  const { id: productSlug } = useParams(); // Get slug from URL
+  const { id: productSlug } = useParams();
   const navigate = useNavigate();
   const { user } = useUser();
 
-  // State management
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
-  
-  // Toast state
+
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
     type: 'success'
   });
 
-  // Button state for loading/success feedback
-  const [buttonState, setButtonState] = useState('default'); // 'default', 'loading', 'success'
+  const [buttonState, setButtonState] = useState('default');
 
-  // Load product data
   useEffect(() => {
     const loadProductData = async () => {
       if (!productSlug) {
@@ -129,7 +123,6 @@ const ProductDetail = () => {
         setLoading(true);
         setError(null);
 
-        // Load main product data
         const productData = await getProductBySlug(productSlug);
 
         if (!productData) {
@@ -140,7 +133,6 @@ const ProductDetail = () => {
 
         setProduct(productData);
 
-        // Set default selections
         if (productData.sizes && productData.sizes.length > 0) {
           setSelectedSize(productData.sizes[0]);
         }
@@ -148,7 +140,6 @@ const ProductDetail = () => {
           setSelectedColor(productData.colors[0]);
         }
 
-        // Debug logging to check what data we're getting
         console.log('Product loaded:', {
           name: productData.name,
           category: productData.category,
@@ -157,13 +148,11 @@ const ProductDetail = () => {
           variations: productData.variations
         });
 
-        // Load related products
         try {
           const related = await getRelatedProducts(productData.id, 4);
           setRelatedProducts(related);
         } catch (relatedError) {
           console.error('Error loading related products:', relatedError);
-          // Don't show error for related products, just continue without them
         }
 
       } catch (err) {
@@ -181,7 +170,6 @@ const ProductDetail = () => {
     loadProductData();
   }, [productSlug]);
 
-  // Generate breadcrumb based on product data
   const getBreadcrumbItems = () => {
     if (!product) return [];
 
@@ -194,12 +182,10 @@ const ProductDetail = () => {
     ];
   };
 
-  // Handle toast close
   const handleCloseToast = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  // Show toast notification
   const showToast = (message, type = 'success') => {
     setToast({
       isVisible: true,
@@ -208,19 +194,14 @@ const ProductDetail = () => {
     });
   };
 
-  // Handler for adding to cart with improved UX
   const handleAddToCart = async () => {
-    // Size and color are just for show - don't validate them
     console.log('Selected size:', selectedSize, 'Selected color:', selectedColor);
 
     try {
-      // Set loading state
       setButtonState('loading');
 
-      // Import cart service functions
       const { getCart, addToCartSimple } = await import('../../services/cartService');
 
-      // Get or create cart
       const cartId = await getCart(user?.id);
 
       console.log('Adding to cart:', {
@@ -228,35 +209,27 @@ const ProductDetail = () => {
         productId: product.id
       });
 
-      // Add to cart using simple method (ignore size/color)
       await addToCartSimple(cartId, product.id, 1);
 
-      // Set success state
       setButtonState('success');
 
-      // Show success toast
       showToast(`${product.name} foi adicionado ao carrinho!`, 'cart');
 
-      // Trigger cart update in header
       window.dispatchEvent(new CustomEvent('cartUpdated'));
 
-      // Reset button state after 2 seconds
       setTimeout(() => {
         setButtonState('default');
       }, 2000);
 
     } catch (error) {
       console.error('Error adding to cart:', error);
-      
-      // Reset button state
+
       setButtonState('default');
-      
-      // Show error toast
+
       showToast('Erro ao adicionar produto ao carrinho. Tente novamente.', 'error');
     }
   };
 
-  // Button content based on state
   const getButtonContent = () => {
     switch (buttonState) {
       case 'loading':
@@ -278,7 +251,6 @@ const ProductDetail = () => {
     }
   };
 
-  // Button styles based on state
   const getButtonStyles = () => {
     const baseStyles = styles.buyButton;
     switch (buttonState) {
@@ -291,21 +263,17 @@ const ProductDetail = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <Layout>
-        {/* Breadcrumb skeleton */}
         <div className={styles.breadcrumbContainer}>
           <div className="container mx-auto px-4">
             <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
           </div>
         </div>
 
-        {/* Product detail skeleton */}
         <div className="container mx-auto px-4 py-8">
           <div className={styles.productContainer}>
-            {/* Gallery skeleton */}
             <div className={styles.galleryContainer}>
               <div className="w-full h-96 bg-gray-200 rounded animate-pulse mb-4"></div>
               <div className="flex gap-2">
@@ -315,7 +283,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Info skeleton */}
             <div className={styles.infoContainer}>
               <div className="h-8 bg-gray-200 rounded w-3/4 mb-4 animate-pulse"></div>
               <div className="h-4 bg-gray-200 rounded w-1/2 mb-4 animate-pulse"></div>
@@ -332,7 +299,6 @@ const ProductDetail = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Layout>
@@ -366,7 +332,6 @@ const ProductDetail = () => {
     );
   }
 
-  // No product found
   if (!product) {
     return (
       <Layout>
@@ -379,7 +344,6 @@ const ProductDetail = () => {
 
   return (
     <Layout>
-      {/* Toast Notification */}
       <Toast
         message={toast.message}
         type={toast.type}
@@ -387,27 +351,21 @@ const ProductDetail = () => {
         onClose={handleCloseToast}
       />
 
-      {/* Breadcrumb */}
       <div className={styles.breadcrumbContainer}>
         <div className="container mx-auto px-4">
           <Breadcrumb items={getBreadcrumbItems()} />
         </div>
       </div>
 
-      {/* Product Detail Content */}
       <div className="container mx-auto px-4 py-8">
         <div className={styles.productContainer}>
-          {/* Left: Product Gallery */}
           <div className={styles.galleryContainer}>
             <ProductGallery images={product.images} />
           </div>
 
-          {/* Right: Product Info */}
           <div className={styles.infoContainer}>
-            {/* Product Title */}
             <h1 className={styles.productTitle}>{product.name}</h1>
 
-            {/* Product Meta */}
             <div className={styles.productMeta}>
               {product.category && <span>{product.category}</span>}
               {product.category && product.brand && <span className={styles.divider}>|</span>}
@@ -416,7 +374,6 @@ const ProductDetail = () => {
               {product.ref && <span>{product.ref}</span>}
             </div>
 
-            {/* Product Rating */}
             {product.rating && (
               <ProductRating
                 rating={product.rating}
@@ -424,13 +381,11 @@ const ProductDetail = () => {
               />
             )}
 
-            {/* Product Price */}
             <ProductPrice
               currentPrice={product.currentPrice}
               originalPrice={product.originalPrice}
             />
 
-            {/* Product Description */}
             {product.description && (
               <div className={styles.descriptionContainer}>
                 <h2 className={styles.sectionTitle}>Descrição do produto</h2>
@@ -438,7 +393,6 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Size Selector - Always show for relevant categories */}
             {product.sizes && product.sizes.length > 0 && (
               <SizeSelector
                 sizes={product.sizes}
@@ -447,7 +401,6 @@ const ProductDetail = () => {
               />
             )}
 
-            {/* Color Selector - Always show if colors are available */}
             {product.colors && product.colors.length > 0 && (
               <ColorSelector
                 colors={product.colors}
@@ -456,7 +409,6 @@ const ProductDetail = () => {
               />
             )}
 
-            {/* Add to Cart Button with enhanced UX */}
             <button
               className={`${getButtonStyles()} flex items-center justify-center transition-all duration-300`}
               onClick={handleAddToCart}
@@ -468,7 +420,6 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Related Products */}
       {relatedProducts.length > 0 && (
         <div className="container mx-auto px-4 mb-12">
           <div className="flex justify-between items-center mb-6">
