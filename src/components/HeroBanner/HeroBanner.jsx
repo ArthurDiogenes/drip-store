@@ -60,11 +60,11 @@ const HeroBannerSlide = ({
         </div>
         
         {/* Versão Desktop - mantida como estava antes */}
-        <div className="hidden md:block">
-            <div className="container mx-auto px-4 py-16 flex flex-col md:flex-row items-center">
+        <div className="hidden md:block min-h-[70vh] lg:min-h-[73vh]">
+            <div className="container mx-auto px-16 py-16 flex flex-col md:flex-row items-center">
                 {/* Conteúdo de texto */}
-                <div className="md:w-1/2 z-10">
-                    <span className="text-amber-500 font-medium text-sm">
+                <div className="md:w-1/2 z-10 px-16">
+                    <span className="text-amber-500 font-medium text-sm lg:text-base lg:text-4xl">
                         {discount > 0 ? `Desconto especial - ${discount}% OFF` : 'Melhores ofertas personalizadas'}
                     </span>
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mt-2 mb-4">{title}</h1>
