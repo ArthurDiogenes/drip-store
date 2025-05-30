@@ -12,7 +12,6 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load user orders
   useEffect(() => {
     const loadOrders = async () => {
       if (!user) {
@@ -38,7 +37,6 @@ const Orders = () => {
     loadOrders();
   }, [user]);
 
-  // Loading state
   if (loading) {
     return (
       <Layout>
@@ -72,7 +70,6 @@ const Orders = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Layout>
@@ -104,12 +101,10 @@ const Orders = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className={styles.ordersPage}>
-          {/* Account Sidebar */}
           <div className={styles.sidebarContainer}>
             <AccountSidebar />
           </div>
-          
-          {/* Orders Content */}
+
           <div className={styles.contentContainer}>
             <OrdersList orders={orders} />
           </div>

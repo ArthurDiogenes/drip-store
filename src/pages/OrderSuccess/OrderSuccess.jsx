@@ -3,53 +3,45 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import { clearCart, getCart } from '../../services/cartService';
 import Layout from '../../components/layout/Layout';
-import styles from './OrderSuccess.module.css';
 
 const OrderSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile } = useUser();
-  
+
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initializeOrderSuccess = async () => {
       try {
-        // Get order data from navigation state or localStorage
         let data = location.state?.orderData;
         const orderCode = location.state?.orderCode;
 
-        // If no data in navigation state, try to get from localStorage (backup)
         if (!data) {
           const storedData = localStorage.getItem('lastOrderData');
           if (storedData) {
             data = JSON.parse(storedData);
-            localStorage.removeItem('lastOrderData'); // Clean up
+            localStorage.removeItem('lastOrderData');
           }
         }
 
-        // If still no data, redirect to home
         if (!data && !orderCode) {
           console.warn('No order data found, redirecting to home');
           navigate('/');
           return;
         }
 
-        // Clear cart after successful order
         if (user) {
           try {
             const cartId = await getCart(user.id);
             await clearCart(cartId);
-            // Trigger cart update event
             window.dispatchEvent(new CustomEvent('cartUpdated'));
           } catch (cartError) {
             console.error('Error clearing cart:', cartError);
-            // Don't block the success page for cart clearing errors
           }
         }
 
-        // Prepare order data for display
         const displayData = {
           orderCode: orderCode || data?.orderCode || generateOrderCode(),
           personalInfo: {
@@ -77,14 +69,14 @@ const OrderSuccess = () => {
               quantity: item.quantidade || 1,
               image: item.imagemUrl || '../images/products/produc-image-0.png'
             })) || [
-              {
-                id: 1,
-                name: 'Tênis Nike Revolution 6 Next Nature Masculino',
-                price: 219.00,
-                quantity: 1,
-                image: '../images/products/produc-image-7.png'
-              }
-            ],
+                {
+                  id: 1,
+                  name: 'Tênis Nike Revolution 6 Next Nature Masculino',
+                  price: 219.00,
+                  quantity: 1,
+                  image: '../images/products/produc-image-7.png'
+                }
+              ],
             subtotal: data?.subtotal || 219.00,
             shipping: data?.shipping || 0,
             discount: data?.discount || 0,
@@ -96,7 +88,6 @@ const OrderSuccess = () => {
 
       } catch (error) {
         console.error('Error initializing order success:', error);
-        // Set fallback data
         setOrderData({
           orderCode: generateOrderCode(),
           personalInfo: {
@@ -135,14 +126,12 @@ const OrderSuccess = () => {
     initializeOrderSuccess();
   }, [location.state, navigate, user, profile]);
 
-  // Generate a mock order code if none provided
   const generateOrderCode = () => {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return `${timestamp}${random}`;
   };
 
-  // Format CPF
   const formatCPF = (cpf) => {
     if (!cpf) return '000.000.000-00';
     const numbers = cpf.replace(/\D/g, '');
@@ -152,7 +141,6 @@ const OrderSuccess = () => {
     return cpf;
   };
 
-  // Format phone
   const formatPhone = (phone) => {
     if (!phone) return '(00) 00000-0000';
     const numbers = phone.replace(/\D/g, '');
@@ -164,7 +152,6 @@ const OrderSuccess = () => {
     return phone;
   };
 
-  // Format CEP
   const formatCEP = (cep) => {
     if (!cep) return '00000-000';
     const numbers = cep.replace(/\D/g, '');
@@ -174,7 +161,6 @@ const OrderSuccess = () => {
     return cep;
   };
 
-  // Loading state
   if (loading) {
     return (
       <Layout>
@@ -232,8 +218,7 @@ const OrderSuccess = () => {
       <div className="bg-gray-50 py-8">
         <div className="container mx-auto px-4">
           <div className="bg-white rounded-lg shadow-sm max-w-2xl mx-auto p-6 md:p-8">
-            
-            {/* Success Icon and Title */}
+
             <div className="text-center mb-8">
               <div className="text-4xl mb-4">🎉</div>
               <h1 className="text-xl md:text-2xl font-medium">
@@ -243,10 +228,9 @@ const OrderSuccess = () => {
                 Pedido nº {orderData.orderCode}
               </p>
             </div>
-            
+
             <div className="border-t border-gray-200 mb-6"></div>
-            
-            {/* Personal Information */}
+
             <section className="mb-6">
               <h2 className="text-base font-medium mb-3">Informações Pessoais</h2>
               <div className="space-y-2">
@@ -268,10 +252,9 @@ const OrderSuccess = () => {
                 </div>
               </div>
             </section>
-            
+
             <div className="border-t border-gray-200 mb-6"></div>
-            
-            {/* Delivery Information */}
+
             <section className="mb-6">
               <h2 className="text-base font-medium mb-3">Informações de Entrega</h2>
               <div className="space-y-2">
@@ -293,10 +276,9 @@ const OrderSuccess = () => {
                 </div>
               </div>
             </section>
-            
+
             <div className="border-t border-gray-200 mb-6"></div>
-            
-            {/* Payment Information */}
+
             <section className="mb-6">
               <h2 className="text-base font-medium mb-3">Informações de Pagamento</h2>
               <div className="space-y-2">
@@ -318,19 +300,18 @@ const OrderSuccess = () => {
                 )}
               </div>
             </section>
-            
+
             <div className="border-t border-gray-200 mb-6"></div>
-            
-            {/* Order Summary */}
+
             <section className="mb-6">
               <h2 className="text-base font-medium mb-3">Resumo da compra</h2>
               <div className="bg-gray-100 p-3 rounded-md space-y-3">
                 {orderData.orderSummary.products.map((product, index) => (
                   <div key={product.id || index} className="flex items-center">
                     <div className="w-16 h-16 bg-white rounded-md flex items-center justify-center p-2 mr-3">
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
+                      <img
+                        src={product.image}
+                        alt={product.name}
                         className="max-h-full max-w-full object-contain"
                         onError={(e) => {
                           e.target.onerror = null;
@@ -353,8 +334,7 @@ const OrderSuccess = () => {
                 ))}
               </div>
             </section>
-            
-            {/* Total */}
+
             <section className="mb-8 bg-amber-50 p-4 rounded-md">
               {orderData.orderSummary.subtotal && (
                 <div className="space-y-1 text-sm mb-2">
@@ -386,31 +366,30 @@ const OrderSuccess = () => {
                 ou 10x de R$ {(orderData.orderSummary.total / 10).toFixed(2).replace('.', ',')} sem juros
               </p>
             </section>
-            
-            {/* Action Buttons */}
+
             <div className="space-y-3">
-              <button 
+              <button
                 className="w-full text-gray-700 text-sm py-2 text-center underline hover:text-gray-900 transition-colors"
                 onClick={() => window.print()}
               >
                 Imprimir Recibo
               </button>
-              
-              <Link 
-                to="/meus-pedidos" 
+
+              <Link
+                to="/meus-pedidos"
                 className="block w-full bg-pink-600 text-center text-white font-medium py-3 rounded-md hover:bg-pink-700 transition-colors"
               >
                 Ver Meus Pedidos
               </Link>
-              
-              <Link 
-                to="/" 
+
+              <Link
+                to="/"
                 className="block w-full bg-yellow-500 text-center text-white font-medium py-3 rounded-md hover:bg-yellow-600 transition-colors"
               >
                 Voltar para Home
               </Link>
             </div>
-            
+
           </div>
         </div>
       </div>

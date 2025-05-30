@@ -10,7 +10,7 @@ import styles from './AddPaymentMethod.module.css';
 const AddPaymentMethod = () => {
   const { user } = useUser();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     tipo: 'Cartão de Crédito',
     bandeira: '',
@@ -19,11 +19,10 @@ const AddPaymentMethod = () => {
     data_validade: '',
     cvv: ''
   });
-  
+
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -32,14 +31,12 @@ const AddPaymentMethod = () => {
     }));
   };
 
-  // Format card number: 0000 0000 0000 0000
   const formatCardNumber = (value) => {
     const numericValue = value.replace(/\D/g, '');
     const groups = numericValue.match(/.{1,4}/g) || [];
-    return groups.join(' ').substr(0, 19); // Max 16 digits with spaces
+    return groups.join(' ').substr(0, 19);
   };
 
-  // Format expiry date: MM/YY
   const formatExpiryDate = (value) => {
     const numericValue = value.replace(/\D/g, '');
     if (numericValue.length >= 2) {
@@ -48,19 +45,16 @@ const AddPaymentMethod = () => {
     return numericValue;
   };
 
-  // Format CVV: 000 or 0000
   const formatCVV = (value) => {
     return value.replace(/\D/g, '').substr(0, 4);
   };
 
-  // Handle formatted inputs
   const handleFormattedInput = (e) => {
     const { name, value } = e.target;
     let formattedValue = value;
 
     if (name === 'numero') {
       formattedValue = formatCardNumber(value);
-      // Auto-detect card brand
       const numericValue = value.replace(/\D/g, '');
       const cardBrand = detectCardBrand(numericValue);
       setFormData(prev => ({
@@ -81,77 +75,66 @@ const AddPaymentMethod = () => {
     }));
   };
 
-  // Detect card brand from number (improved detection)
   const detectCardBrand = (number) => {
-    // Remove spaces and get first few digits
     const cleanNumber = number.replace(/\s/g, '');
-    
+
     if (cleanNumber.startsWith('4')) return 'Visa';
     if (cleanNumber.startsWith('5') || cleanNumber.startsWith('2')) return 'Mastercard';
     if (cleanNumber.startsWith('34') || cleanNumber.startsWith('37')) return 'Amex';
     if (cleanNumber.startsWith('6')) return 'Elo';
-    
-    // For educational purposes, if number is long enough, default to Visa
+
     if (cleanNumber.length >= 4) return 'Visa';
-    
+
     return '';
   };
 
-  // Validate card number (relaxed for educational purposes)
   const validateCardNumber = (number) => {
     const numericNumber = number.replace(/\D/g, '');
-    // For educational purposes, just check length (13-19 digits is typical range)
     return numericNumber.length >= 13 && numericNumber.length <= 19;
   };
 
-  // Validate expiry date
   const validateExpiryDate = (dateString) => {
     if (!dateString.includes('/')) return false;
-    
+
     const [month, year] = dateString.split('/');
     const monthNum = parseInt(month);
     const yearNum = parseInt(`20${year}`);
-    
+
     if (monthNum < 1 || monthNum > 12) return false;
-    
+
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1;
-    
+
     if (yearNum < currentYear) return false;
     if (yearNum === currentYear && monthNum < currentMonth) return false;
-    
+
     return true;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!user) return;
 
     setError(null);
 
-    // Validate card number (relaxed validation for educational purposes)
     if (!validateCardNumber(formData.numero)) {
       setError('Número do cartão deve ter entre 13 e 19 dígitos.');
       return;
     }
 
-    // Validate expiry date
     if (!validateExpiryDate(formData.data_validade)) {
       setError('Data de validade inválida.');
       return;
     }
 
-    // Validate CVV
     const cvvLength = formData.bandeira === 'Amex' ? 4 : 3;
     if (formData.cvv.length !== cvvLength) {
       setError(`CVV deve ter ${cvvLength} dígitos.`);
       return;
     }
 
-    // Validate required fields
     if (!formData.nome_titular.trim()) {
       setError('Nome do titular é obrigatório.');
       return;
@@ -160,7 +143,6 @@ const AddPaymentMethod = () => {
     try {
       setLoading(true);
 
-      // Prepare data for storage
       const cardData = {
         tipo: formData.tipo,
         bandeira: formData.bandeira,
@@ -170,8 +152,7 @@ const AddPaymentMethod = () => {
       };
 
       await addPaymentMethod(user.id, cardData);
-      
-      // Redirect back to payment methods page
+
       navigate('/metodos-pagamento');
 
     } catch (err) {
@@ -186,12 +167,10 @@ const AddPaymentMethod = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className={styles.addPaymentPage}>
-          {/* Account Sidebar */}
           <div className={styles.sidebarContainer}>
             <AccountSidebar />
           </div>
-          
-          {/* Add Payment Method Content */}
+
           <div className={styles.contentContainer}>
             <div className={styles.headerContainer}>
               <h1 className={styles.pageTitle}>Adicionar Cartão</h1>
@@ -203,7 +182,6 @@ const AddPaymentMethod = () => {
               </button>
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
                 {error}
@@ -212,7 +190,6 @@ const AddPaymentMethod = () => {
 
             <div className={styles.formCard}>
               <form onSubmit={handleSubmit} className={styles.form}>
-                {/* Card Type */}
                 <div className={styles.formGroup}>
                   <label htmlFor="tipo" className={styles.label}>
                     Tipo de Cartão <span className={styles.required}>*</span>
@@ -231,7 +208,6 @@ const AddPaymentMethod = () => {
                   </select>
                 </div>
 
-                {/* Card Number */}
                 <div className={styles.formGroup}>
                   <label htmlFor="numero" className={styles.label}>
                     Número do Cartão <span className={styles.required}>*</span>
@@ -260,7 +236,6 @@ const AddPaymentMethod = () => {
                   </p>
                 </div>
 
-                {/* Cardholder Name */}
                 <div className={styles.formGroup}>
                   <label htmlFor="nome_titular" className={styles.label}>
                     Nome do Titular <span className={styles.required}>*</span>
@@ -278,7 +253,6 @@ const AddPaymentMethod = () => {
                   />
                 </div>
 
-                {/* Expiry Date and CVV */}
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label htmlFor="data_validade" className={styles.label}>
@@ -317,20 +291,18 @@ const AddPaymentMethod = () => {
                   </div>
                 </div>
 
-                {/* Security Notice */}
                 <div className={styles.securityNotice}>
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 mt-1">🔒</div>
                     <div>
                       <p className="text-sm text-gray-600">
-                        <strong>Segurança garantida:</strong> Seus dados são criptografados e protegidos. 
+                        <strong>Segurança garantida:</strong> Seus dados são criptografados e protegidos.
                         Não armazenamos o número completo do cartão nem o CVV.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className={styles.actionButtons}>
                   <button
                     type="button"

@@ -1,4 +1,3 @@
-// src/pages/Checkout/Checkout.jsx - VERSÃO ATUALIZADA SEM ALERTS
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, X, ShoppingCart, Info } from 'lucide-react';
@@ -11,7 +10,6 @@ import { validateCoupon, applyCoupon } from '../../services/couponService';
 import { getShippingCost } from '../../services/shippingService';
 import styles from './Checkout.module.css';
 
-// Toast Component
 const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 }) => {
   useEffect(() => {
     if (isVisible) {
@@ -95,20 +93,16 @@ const Checkout = () => {
   const { user, profile } = useUser();
   const { cartItems, cartSubtotal } = useCart();
 
-  // Form states
   const [formData, setFormData] = useState({
-    // Personal info
     fullName: '',
     cpf: '',
     email: '',
     phone: '',
-    // Shipping info
     address: '',
     neighborhood: '',
     city: '',
     zipcode: '',
     complement: '',
-    // Payment info
     paymentMethod: 'credit',
     cardName: '',
     cardNumber: '',
@@ -116,26 +110,22 @@ const Checkout = () => {
     cvv: ''
   });
 
-  // Checkout states
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  
-  // Pricing states
+
   const [discount, setDiscount] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [shippingCalculated, setShippingCalculated] = useState(false);
 
-  // Toast state
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
     type: 'success'
   });
 
-  // Toast helpers
   const showToast = (message, type = 'success') => {
     setToast({
       isVisible: true,
@@ -148,32 +138,27 @@ const Checkout = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  // Load user data and cart
   useEffect(() => {
     const loadCheckoutData = async () => {
       try {
         setLoading(true);
         setError('');
 
-        // Check if user is logged in
         if (!user) {
           navigate('/login');
           return;
         }
 
-        // Check if cart has items
         if (!cartItems || cartItems.length === 0) {
           navigate('/carrinho');
           return;
         }
 
-        // Load user profile data
         let userProfile = profile;
         if (!userProfile) {
           userProfile = await getUserProfile(user.id);
         }
 
-        // Pre-fill form with user data
         if (userProfile) {
           setFormData(prev => ({
             ...prev,
@@ -188,12 +173,10 @@ const Checkout = () => {
             complement: userProfile.complemento || ''
           }));
 
-          // Auto-calculate shipping if CEP is available
           if (userProfile.cep) {
             handleShippingCalculation(userProfile.cep);
           }
         } else {
-          // Fill with user email at least
           setFormData(prev => ({
             ...prev,
             email: user.email || ''
@@ -211,7 +194,6 @@ const Checkout = () => {
     loadCheckoutData();
   }, [user, profile, cartItems, navigate]);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -220,7 +202,6 @@ const Checkout = () => {
     }));
   };
 
-  // Handle coupon application - NO MORE ALERTS
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
       showToast('Digite um código de cupom.', 'error');
@@ -229,13 +210,12 @@ const Checkout = () => {
 
     try {
       const result = await validateCoupon(couponCode, cartSubtotal);
-      
+
       if (result.isValid) {
         setAppliedCoupon(result.coupon);
         setDiscount(result.coupon.discountValue);
         showToast(`Cupom "${result.coupon.code}" aplicado com sucesso!`, 'success');
-        
-        // Recalculate shipping if free shipping coupon
+
         if (result.coupon.freeShipping && formData.zipcode) {
           const shippingResult = await getShippingCost(formData.zipcode, cartSubtotal, true);
           setShipping(shippingResult.cost);
@@ -249,7 +229,6 @@ const Checkout = () => {
     }
   };
 
-  // Handle shipping calculation - NO MORE ALERTS
   const handleShippingCalculation = async (zipCode) => {
     if (!zipCode || zipCode.replace(/\D/g, '').length !== 8) {
       showToast('Digite um CEP válido.', 'error');
@@ -259,14 +238,14 @@ const Checkout = () => {
     try {
       const freeShipping = appliedCoupon?.freeShipping || false;
       const result = await getShippingCost(zipCode, cartSubtotal, freeShipping);
-      
+
       setShipping(result.cost);
       setShippingCalculated(true);
-      
-      const message = result.isFree 
+
+      const message = result.isFree
         ? `Frete grátis! Entrega em ${result.deliveryTime}`
         : `Frete: R$ ${result.cost.toFixed(2).replace('.', ',')} - Entrega em ${result.deliveryTime}`;
-      
+
       showToast(message, 'success');
     } catch (error) {
       console.error('Error calculating shipping:', error);
@@ -274,38 +253,32 @@ const Checkout = () => {
     }
   };
 
-  // Calculate total
   const total = cartSubtotal + shipping - discount;
 
-  // Form validation
   const validateForm = () => {
     const required = ['fullName', 'cpf', 'email', 'phone', 'address', 'neighborhood', 'city', 'zipcode'];
-    
+
     for (const field of required) {
       if (!formData[field].trim()) {
         throw new Error('Por favor, preencha todos os campos obrigatórios.');
       }
     }
 
-    // Validate CPF
     const cpfNumbers = formData.cpf.replace(/\D/g, '');
     if (cpfNumbers.length !== 11) {
       throw new Error('CPF deve ter 11 dígitos.');
     }
 
-    // Validate phone
     const phoneNumbers = formData.phone.replace(/\D/g, '');
     if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
       throw new Error('Número de telefone inválido.');
     }
 
-    // Validate CEP
     const cepNumbers = formData.zipcode.replace(/\D/g, '');
     if (cepNumbers.length !== 8) {
       throw new Error('CEP deve ter 8 dígitos.');
     }
 
-    // Validate payment method
     if (formData.paymentMethod === 'credit') {
       if (!formData.cardName.trim()) {
         throw new Error('Nome do cartão é obrigatório.');
@@ -321,24 +294,20 @@ const Checkout = () => {
       }
     }
 
-    // Check if shipping was calculated
     if (!shippingCalculated) {
       throw new Error('Por favor, calcule o frete antes de finalizar.');
     }
   };
 
-  // Handle form submission - NO MORE ALERTS
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setSubmitting(true);
       setError('');
 
-      // Validate form
       validateForm();
 
-      // Prepare order data
       const orderData = {
         userId: user.id,
         subtotal: cartSubtotal,
@@ -351,13 +320,13 @@ const Checkout = () => {
           endereco: formData.address,
           bairro: formData.neighborhood,
           cidade: formData.city,
-          estado: 'CE', // Default - could be made dynamic
+          estado: 'CE',
           cep: formData.zipcode.replace(/\D/g, ''),
           complemento: formData.complement
         },
         items: cartItems.map(item => ({
           produto_id: item.produto.id,
-          variacao_id: null, // Simplified for now
+          variacao_id: null,
           quantidade: item.quantidade,
           preco_unitario: item.produto.precoAtual
         }))
@@ -365,22 +334,18 @@ const Checkout = () => {
 
       console.log('Creating order with data:', orderData);
 
-      // Create order
       const order = await createOrder(orderData);
       console.log('Order created successfully:', order);
 
-      // Apply coupon if used
       if (appliedCoupon) {
         await applyCoupon(appliedCoupon.id);
       }
 
-      // Show success toast instead of alert
       showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
-      
-      // Navigate to success page after a brief delay
+
       setTimeout(() => {
-        navigate('/compra-realizada', { 
-          state: { 
+        navigate('/compra-realizada', {
+          state: {
             orderCode: order.codigo,
             orderData: orderData
           }
@@ -396,7 +361,6 @@ const Checkout = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <Layout>
@@ -430,7 +394,6 @@ const Checkout = () => {
 
   return (
     <Layout>
-      {/* Toast Notification */}
       <Toast
         message={toast.message}
         type={toast.type}
@@ -449,11 +412,9 @@ const Checkout = () => {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Form Section */}
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-md p-6 space-y-8">
-                
-                {/* Personal Information */}
+
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações Pessoais</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -516,7 +477,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Shipping Information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Entrega</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -602,7 +562,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Coupon Section */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Cupom de Desconto</h2>
                   <div className="flex max-w-md">
@@ -630,11 +589,9 @@ const Checkout = () => {
                   )}
                 </div>
 
-                {/* Payment Information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Pagamento</h2>
-                  
-                  {/* Payment Method Selection */}
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Forma de Pagamento</label>
                     <div className="flex space-x-4">
@@ -665,7 +622,6 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {/* Credit Card Fields */}
                   {formData.paymentMethod === 'credit' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
@@ -731,7 +687,6 @@ const Checkout = () => {
                   )}
                 </div>
 
-                {/* Submit Button - Mobile */}
                 <div className="md:hidden">
                   <button
                     type="submit"
@@ -745,12 +700,10 @@ const Checkout = () => {
               </form>
             </div>
 
-            {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-md p-6 sticky top-4">
                 <h2 className="text-lg font-semibold mb-4">Resumo do Pedido</h2>
 
-                {/* Cart Items */}
                 <div className="space-y-3">
                   {cartItems.slice(0, 3).map((item) => (
                     <div key={item.id} className="flex items-center space-x-3">
@@ -778,7 +731,7 @@ const Checkout = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   {cartItems.length > 3 && (
                     <div className="text-sm text-gray-500 text-center">
                       +{cartItems.length - 3} outros itens
@@ -788,40 +741,38 @@ const Checkout = () => {
 
                 <hr className="my-4" />
 
-                {/* Pricing Summary */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal:</span>
                     <span>R$ {cartSubtotal.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>Frete:</span>
                     <span>
                       {shipping === 0 ? 'Grátis' : `R$ ${shipping.toFixed(2).replace('.', ',')}`}
                     </span>
                   </div>
-                  
+
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto:</span>
                       <span>-R$ {discount.toFixed(2).replace('.', ',')}</span>
                     </div>
                   )}
-                  
+
                   <hr className="my-2" />
-                  
+
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
                     <span className="text-pink-600">R$ {total.toFixed(2).replace('.', ',')}</span>
                   </div>
-                  
+
                   <div className="text-xs text-gray-500 text-right">
                     ou 10x de R$ {(total / 10).toFixed(2).replace('.', ',')} sem juros
                   </div>
                 </div>
 
-                {/* Submit Button - Desktop */}
                 <div className="hidden md:block mt-6">
                   <button
                     type="button"
@@ -833,7 +784,6 @@ const Checkout = () => {
                   </button>
                 </div>
 
-                {/* Payment Info */}
                 <div className="mt-4 text-xs text-gray-500 text-center">
                   🔒 Suas informações estão seguras e protegidas
                 </div>

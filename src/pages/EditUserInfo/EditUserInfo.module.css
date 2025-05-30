@@ -1,5 +1,3 @@
-/* src/pages/EditUserInfo/EditUserInfo.module.css */
-
 .editUserInfoPage {
   display: flex;
   flex-direction: column;
@@ -17,7 +15,7 @@
 .pageTitle {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #111827; /* Gray-900 */
+  color: #111827;
   margin-bottom: 1.5rem;
 }
 
@@ -43,12 +41,12 @@
 .sectionTitle {
   font-size: 1.125rem;
   font-weight: 500;
-  color: #111827; /* Gray-900 */
+  color: #111827;
 }
 
 .separator {
   height: 1px;
-  background-color: #e5e7eb; /* Gray-200 */
+  background-color: #e5e7eb;
   margin-bottom: 0.5rem;
 }
 
@@ -61,38 +59,38 @@
 .label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #111827; /* Gray-900 */
+  color: #111827;
 }
 
 .input {
   padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb; /* Gray-200 */
+  border: 1px solid #e5e7eb;
   border-radius: 0.25rem;
   font-size: 0.875rem;
-  background-color: #f9fafb; /* Gray-50 */
-  color: #111827; /* Gray-900 */
+  background-color: #f9fafb;
+  color: #111827;
   transition: border-color 0.2s, background-color 0.2s;
 }
 
 .input:focus {
   outline: none;
   background-color: white;
-  border-color: #db2777; /* Pink-600 */
+  border-color: #db2777;
 }
 
 .input:disabled {
-  background-color: #f3f4f6; /* Gray-100 */
-  color: #6b7280; /* Gray-500 */
+  background-color: #f3f4f6;
+  color: #6b7280;
   cursor: not-allowed;
 }
 
 .required {
-  color: #ef4444; /* Red-500 */
+  color: #ef4444;
 }
 
 .helpText {
   font-size: 0.75rem;
-  color: #6b7280; /* Gray-500 */
+  color: #6b7280;
   margin-top: 0.25rem;
 }
 
@@ -109,7 +107,7 @@
   -moz-appearance: none;
   width: 20px;
   height: 20px;
-  border: 1px solid #d1d5db; /* Gray-300 */
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   outline: none;
   cursor: pointer;
@@ -122,8 +120,8 @@
 }
 
 .checkbox:checked {
-  background-color: #db2777; /* Pink-600 */
-  border-color: #db2777; /* Pink-600 */
+  background-color: #db2777;
+  border-color: #db2777;
 }
 
 .checkbox:checked::after {
@@ -139,14 +137,14 @@
 }
 
 .checkbox:disabled {
-  background-color: #f3f4f6; /* Gray-100 */
-  border-color: #d1d5db; /* Gray-300 */
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
   cursor: not-allowed;
 }
 
 .checkboxLabel {
   font-size: 0.875rem;
-  color: #4b5563; /* Gray-600 */
+  color: #4b5563;
   line-height: 1.5;
   cursor: pointer;
 }
@@ -157,14 +155,14 @@
   justify-content: flex-end;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb; /* Gray-200 */
+  border-top: 1px solid #e5e7eb;
 }
 
 .cancelButton {
   padding: 0.75rem 1.5rem;
   background-color: white;
-  color: #6b7280; /* Gray-500 */
-  border: 1px solid #d1d5db; /* Gray-300 */
+  color: #6b7280;
+  border: 1px solid #d1d5db;
   border-radius: 0.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -173,8 +171,8 @@
 }
 
 .cancelButton:hover:not(:disabled) {
-  background-color: #f9fafb; /* Gray-50 */
-  color: #374151; /* Gray-700 */
+  background-color: #f9fafb;
+  color: #374151;
 }
 
 .cancelButton:disabled {
@@ -184,7 +182,7 @@
 
 .saveButton {
   padding: 0.75rem 1.5rem;
-  background-color: #db2777; /* Pink-600 */
+  background-color: #db2777;
   color: white;
   border: none;
   border-radius: 0.25rem;
@@ -195,15 +193,14 @@
 }
 
 .saveButton:hover:not(:disabled) {
-  background-color: #be185d; /* Pink-700 */
+  background-color: #be185d;
 }
 
 .saveButton:disabled {
-  background-color: #9ca3af; /* Gray-400 */
+  background-color: #9ca3af;
   cursor: not-allowed;
 }
 
-/* Desktop layout */
 @media (min-width: 768px) {
   .editUserInfoPage {
     flex-direction: row;
@@ -226,7 +223,6 @@
   }
 }
 
-/* Mobile adjustments */
 @media (max-width: 767px) {
   .formCard {
     padding: 1.5rem;
