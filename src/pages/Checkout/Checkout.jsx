@@ -159,8 +159,11 @@ const PaymentMethodCard = ({ method, isSelected, onSelect, disabled }) => {
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile } = useUser();
   const { cartItems, cartSubtotal } = useCart();
+
+  const [checkoutData, setCheckoutData] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -185,7 +188,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-
+  
   const [discount, setDiscount] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [couponCode, setCouponCode] = useState('');
@@ -211,7 +214,46 @@ const Checkout = () => {
   };
 
   useEffect(() => {
-    const loadCheckoutData = async () => {
+    const loadCheckoutData = () => {
+      try {
+        let data = location.state?.checkoutData;
+        
+        if (!data) {
+          const storedData = localStorage.getItem('checkoutData');
+          if (storedData) {
+            data = JSON.parse(storedData);
+          }
+        }
+        
+        if (data) {
+          setCheckoutData(data);
+          
+          if (data.discount > 0) {
+            setDiscount(data.discount);
+            setAppliedCoupon(data.appliedCoupon);
+            
+            if (data.appliedCoupon?.code) {
+              setCouponCode(data.appliedCoupon.code);
+            }
+          }
+          
+          if (data.shipping >= 0) {
+            setShipping(data.shipping);
+            setShippingCalculated(true);
+          }
+          
+          console.log('Checkout data loaded:', data);
+        }
+      } catch (err) {
+        console.error('Error loading checkout data:', err);
+      }
+    };
+
+    loadCheckoutData();
+  }, [location.state]);
+
+  useEffect(() => {
+    const loadUserAndCartData = async () => {
       try {
         setLoading(true);
         setError('');
@@ -221,7 +263,8 @@ const Checkout = () => {
           return;
         }
 
-        if (!cartItems || cartItems.length === 0) {
+        const itemsToCheck = checkoutData?.items || cartItems;
+        if (!itemsToCheck || itemsToCheck.length === 0) {
           navigate('/carrinho');
           return;
         }
@@ -245,7 +288,7 @@ const Checkout = () => {
             complement: userProfile.complemento || ''
           }));
 
-          if (userProfile.cep) {
+          if (userProfile.cep && !shippingCalculated) {
             handleShippingCalculation(userProfile.cep);
           }
         } else {
@@ -296,8 +339,10 @@ const Checkout = () => {
       }
     };
 
-    loadCheckoutData();
-  }, [user, profile, cartItems, navigate]);
+    if (user !== undefined) {
+      loadUserAndCartData();
+    }
+  }, [user, profile, navigate, checkoutData, shippingCalculated]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -335,15 +380,16 @@ const Checkout = () => {
     }
 
     try {
-      const result = await validateCoupon(couponCode, cartSubtotal);
-
+      const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
+      const result = await validateCoupon(couponCode, currentSubtotal);
+      
       if (result.isValid) {
         setAppliedCoupon(result.coupon);
         setDiscount(result.coupon.discountValue);
         showToast(`Cupom "${result.coupon.code}" aplicado com sucesso!`, 'success');
-
+        
         if (result.coupon.freeShipping && formData.zipcode) {
-          const shippingResult = await getShippingCost(formData.zipcode, cartSubtotal, true);
+          const shippingResult = await getShippingCost(formData.zipcode, currentSubtotal, true);
           setShipping(shippingResult.cost);
         }
       } else {
@@ -362,16 +408,17 @@ const Checkout = () => {
     }
 
     try {
+      const currentSubtotal = checkoutData?.subtotal || cartSubtotal;
       const freeShipping = appliedCoupon?.freeShipping || false;
-      const result = await getShippingCost(zipCode, cartSubtotal, freeShipping);
-
+      const result = await getShippingCost(zipCode, currentSubtotal, freeShipping);
+      
       setShipping(result.cost);
       setShippingCalculated(true);
-
-      const message = result.isFree
+      
+      const message = result.isFree 
         ? `Frete grátis! Entrega em ${result.deliveryTime}`
         : `Frete: R$ ${result.cost.toFixed(2).replace('.', ',')} - Entrega em ${result.deliveryTime}`;
-
+      
       showToast(message, 'success');
     } catch (error) {
       console.error('Error calculating shipping:', error);
@@ -379,11 +426,19 @@ const Checkout = () => {
     }
   };
 
-  const total = cartSubtotal + shipping - discount;
+  const getCurrentSubtotal = () => {
+    return checkoutData?.subtotal || cartSubtotal || 0;
+  };
+
+  const getCurrentItems = () => {
+    return checkoutData?.items || cartItems || [];
+  };
+
+  const total = getCurrentSubtotal() + shipping - discount;
 
   const validateForm = () => {
     const required = ['fullName', 'cpf', 'email', 'phone', 'address', 'neighborhood', 'city', 'zipcode'];
-
+    
     for (const field of required) {
       if (!formData[field].trim()) {
         throw new Error('Por favor, preencha todos os campos obrigatórios.');
@@ -431,16 +486,19 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     try {
       setSubmitting(true);
       setError('');
 
       validateForm();
 
+      const currentSubtotal = getCurrentSubtotal();
+      const currentItems = getCurrentItems();
+
       const orderData = {
         userId: user.id,
-        subtotal: cartSubtotal,
+        subtotal: currentSubtotal,
         shipping: shipping,
         discount: discount,
         total: total,
@@ -456,7 +514,7 @@ const Checkout = () => {
           cep: formData.zipcode.replace(/\D/g, ''),
           complemento: formData.complement
         },
-        items: cartItems.map(item => ({
+        items: currentItems.map(item => ({
           produto_id: item.produto.id,
           variacao_id: null,
           quantidade: item.quantidade,
@@ -484,11 +542,13 @@ const Checkout = () => {
         await applyCoupon(appliedCoupon.id);
       }
 
-      showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
+      localStorage.removeItem('checkoutData');
 
+      showToast(`✅ Pedido realizado com sucesso! Número: ${order.codigo}`, 'success');
+      
       setTimeout(() => {
-        navigate('/compra-realizada', {
-          state: {
+        navigate('/compra-realizada', { 
+          state: { 
             orderCode: order.codigo,
             orderData: orderData
           }
@@ -503,6 +563,7 @@ const Checkout = () => {
       setSubmitting(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -535,6 +596,9 @@ const Checkout = () => {
     );
   }
 
+  const currentItems = getCurrentItems();
+  const currentSubtotal = getCurrentSubtotal();
+
   return (
     <Layout>
       <Toast
@@ -554,10 +618,38 @@ const Checkout = () => {
             </div>
           )}
 
+          {appliedCoupon && discount > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-green-800">
+                    ✅ Cupom Aplicado: "{appliedCoupon.code}"
+                  </h4>
+                  <p className="text-xs text-green-600 mt-1">
+                    Desconto: R$ {discount.toFixed(2).replace('.', ',')}
+                    {appliedCoupon.freeShipping && ' + Frete Grátis'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setAppliedCoupon(null);
+                    setDiscount(0);
+                    setCouponCode('');
+                    showToast('Cupom removido', 'info');
+                  }}
+                  className="text-red-600 hover:text-red-800 text-sm underline"
+                  disabled={submitting}
+                >
+                  Remover
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white rounded-md p-6 space-y-8">
-
+                
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações Pessoais</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -714,22 +806,17 @@ const Checkout = () => {
                       onChange={(e) => setCouponCode(e.target.value)}
                       placeholder="Digite o código do cupom"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                      disabled={submitting}
+                      disabled={submitting || appliedCoupon}
                     />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
                       className="px-4 py-2 bg-pink-600 text-white rounded-r-md hover:bg-pink-700 disabled:bg-gray-400"
-                      disabled={submitting}
+                      disabled={submitting || appliedCoupon}
                     >
                       Aplicar
                     </button>
                   </div>
-                  {appliedCoupon && (
-                    <div className="mt-2 text-sm text-green-600">
-                      ✅ Cupom "{appliedCoupon.code}" aplicado - Desconto: R$ {discount.toFixed(2).replace('.', ',')}
-                    </div>
-                  )}
                 </div>
 
                 <div>
@@ -894,7 +981,7 @@ const Checkout = () => {
                 <div className="md:hidden">
                   <button
                     type="submit"
-                    disabled={submitting || cartItems.length === 0}
+                    disabled={submitting || currentItems.length === 0}
                     className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {submitting ? 'Processando...' : 'Realizar Pagamento'}
@@ -909,7 +996,7 @@ const Checkout = () => {
                 <h2 className="text-lg font-semibold mb-4">Resumo do Pedido</h2>
 
                 <div className="space-y-3">
-                  {cartItems.slice(0, 3).map((item) => (
+                  {currentItems.slice(0, 3).map((item) => (
                     <div key={item.id} className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden">
                         <img
@@ -935,10 +1022,10 @@ const Checkout = () => {
                       </div>
                     </div>
                   ))}
-
-                  {cartItems.length > 3 && (
+                  
+                  {currentItems.length > 3 && (
                     <div className="text-sm text-gray-500 text-center">
-                      +{cartItems.length - 3} outros itens
+                      +{currentItems.length - 3} outros itens
                     </div>
                   )}
                 </div>
@@ -948,30 +1035,30 @@ const Checkout = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal:</span>
-                    <span>R$ {cartSubtotal.toFixed(2).replace('.', ',')}</span>
+                    <span>R$ {currentSubtotal.toFixed(2).replace('.', ',')}</span>
                   </div>
-
+                  
                   <div className="flex justify-between text-sm">
                     <span>Frete:</span>
                     <span>
                       {shipping === 0 ? 'Grátis' : `R$ ${shipping.toFixed(2).replace('.', ',')}`}
                     </span>
                   </div>
-
+                  
                   {discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto:</span>
                       <span>-R$ {discount.toFixed(2).replace('.', ',')}</span>
                     </div>
                   )}
-
+                  
                   <hr className="my-2" />
-
+                  
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
                     <span className="text-pink-600">R$ {total.toFixed(2).replace('.', ',')}</span>
                   </div>
-
+                  
                   <div className="text-xs text-gray-500 text-right">
                     ou 10x de R$ {(total / 10).toFixed(2).replace('.', ',')} sem juros
                   </div>
@@ -995,7 +1082,7 @@ const Checkout = () => {
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={submitting || cartItems.length === 0}
+                    disabled={submitting || currentItems.length === 0}
                     className="w-full bg-yellow-500 text-white py-3 px-6 rounded-md font-medium hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {submitting ? 'Processando...' : 'Realizar Pagamento'}
