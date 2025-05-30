@@ -1,5 +1,3 @@
-/* src/pages/AddPaymentMethod/AddPaymentMethod.module.css */
-
 .addPaymentPage {
   display: flex;
   flex-direction: column;
@@ -26,15 +24,15 @@
 .pageTitle {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #111827; /* Gray-900 */
+  color: #111827;
 }
 
 .backButton {
   display: inline-flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  background-color: #f3f4f6; /* Gray-100 */
-  color: #6b7280; /* Gray-500 */
+  background-color: #f3f4f6;
+  color: #6b7280;
   font-size: 0.875rem;
   font-weight: 500;
   border: none;
@@ -45,8 +43,8 @@
 }
 
 .backButton:hover {
-  background-color: #e5e7eb; /* Gray-200 */
-  color: #374151; /* Gray-700 */
+  background-color: #e5e7eb;
+  color: #374151;
 }
 
 .formCard {
@@ -78,38 +76,38 @@
 .label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #111827; /* Gray-900 */
+  color: #111827;
 }
 
 .input {
   padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb; /* Gray-200 */
+  border: 1px solid #e5e7eb;
   border-radius: 0.25rem;
   font-size: 0.875rem;
-  background-color: #f9fafb; /* Gray-50 */
-  color: #111827; /* Gray-900 */
+  background-color: #f9fafb;
+  color: #111827;
   transition: border-color 0.2s, background-color 0.2s;
 }
 
 .input:focus {
   outline: none;
   background-color: white;
-  border-color: #db2777; /* Pink-600 */
+  border-color: #db2777;
 }
 
 .input:disabled {
-  background-color: #f3f4f6; /* Gray-100 */
-  color: #6b7280; /* Gray-500 */
+  background-color: #f3f4f6;
+  color: #6b7280;
   cursor: not-allowed;
 }
 
 .required {
-  color: #ef4444; /* Red-500 */
+  color: #ef4444;
 }
 
 .helpText {
   font-size: 0.75rem;
-  color: #6b7280; /* Gray-500 */
+  color: #6b7280;
   margin-top: 0.25rem;
   line-height: 1.4;
 }
@@ -127,16 +125,16 @@
   transform: translateY(-50%);
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6b7280; /* Gray-500 */
+  color: #6b7280;
   background-color: white;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
-  border: 1px solid #e5e7eb; /* Gray-200 */
+  border: 1px solid #e5e7eb;
 }
 
 .securityNotice {
-  background-color: #f0fdf4; /* Green-50 */
-  border: 1px solid #bbf7d0; /* Green-200 */
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
   border-radius: 0.25rem;
   padding: 1rem;
   margin: 1rem 0;
@@ -148,14 +146,14 @@
   justify-content: flex-end;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb; /* Gray-200 */
+  border-top: 1px solid #e5e7eb;
 }
 
 .cancelButton {
   padding: 0.75rem 1.5rem;
   background-color: white;
-  color: #6b7280; /* Gray-500 */
-  border: 1px solid #d1d5db; /* Gray-300 */
+  color: #6b7280;
+  border: 1px solid #d1d5db;
   border-radius: 0.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -164,8 +162,8 @@
 }
 
 .cancelButton:hover:not(:disabled) {
-  background-color: #f9fafb; /* Gray-50 */
-  color: #374151; /* Gray-700 */
+  background-color: #f9fafb;
+  color: #374151;
 }
 
 .cancelButton:disabled {
@@ -175,7 +173,7 @@
 
 .saveButton {
   padding: 0.75rem 1.5rem;
-  background-color: #db2777; /* Pink-600 */
+  background-color: #db2777;
   color: white;
   border: none;
   border-radius: 0.25rem;
@@ -186,11 +184,11 @@
 }
 
 .saveButton:hover:not(:disabled) {
-  background-color: #be185d; /* Pink-700 */
+  background-color: #be185d;
 }
 
 .saveButton:disabled {
-  background-color: #9ca3af; /* Gray-400 */
+  background-color: #9ca3af;
   cursor: not-allowed;
 }
 
@@ -209,7 +207,6 @@
   }
 }
 
-/* Mobile adjustments */
 @media (max-width: 767px) {
   .formCard {
     padding: 1.5rem;

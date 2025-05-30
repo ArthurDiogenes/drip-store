@@ -1,4 +1,3 @@
-/* src/pages/Auth/RegisterForm.module.css */
 .registerFormContainer {
   width: 100%;
   max-width: 800px;
@@ -147,7 +146,6 @@
   background-color: #be185d;
 }
 
-/* Responsive adjustments */
 @media (min-width: 768px) {
   .registerFormContainer {
     padding: 2rem;

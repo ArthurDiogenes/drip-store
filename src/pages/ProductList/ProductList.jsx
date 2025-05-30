@@ -1,4 +1,3 @@
-// src/pages/ProductList/ProductList.jsx (Atualizada com integração Supabase)
 import React, { useState, useEffect } from "react";
 import { ChevronRight, X, Filter, ChevronDown } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
@@ -11,14 +10,12 @@ const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Estado para controle de filtros e produtos
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [productCount, setProductCount] = useState(0);
 
-  // Estados para filtros
   const [activeFilters, setActiveFilters] = useState({
     brands: searchParams.getAll('marca') || [],
     categories: searchParams.getAll('categoria') || [],
@@ -27,23 +24,18 @@ const ProductList = () => {
     condition: searchParams.get('estado') || null,
   });
 
-  // Estado para ordenação
   const [sortBy, setSortBy] = useState(searchParams.get('ordenar') || "relevancia");
 
-  // Estado para paginação
   const [page, setPage] = useState(parseInt(searchParams.get('pagina') || '1', 10));
-  const [pageSize, setPageSize] = useState(parseInt(searchParams.get('itens') || '12', 10));
+  const [pageSize] = useState(parseInt(searchParams.get('itens') || '12', 10));
 
-  // Carregar categorias e marcas do banco de dados
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [searchQuery] = useState(searchParams.get('q') || '');
 
-  // Carregar dados iniciais
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        // Carregar categorias
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('categorias')
           .select('id, nome, slug')
@@ -53,7 +45,6 @@ const ProductList = () => {
         if (categoriesError) throw categoriesError;
         setCategories(categoriesData || []);
 
-        // Carregar marcas
         const { data: brandsData, error: brandsError } = await supabase
           .from('marcas')
           .select('id, nome, slug')
@@ -72,13 +63,11 @@ const ProductList = () => {
     loadInitialData();
   }, []);
 
-  // Carregar produtos com base nos filtros
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setLoading(true);
 
-        // Carregar IDs de categorias e marcas filtradas para usar na consulta
         let categoryIds = [];
         let brandIds = [];
 
@@ -104,7 +93,6 @@ const ProductList = () => {
           }
         }
 
-        // Construir query base
         let query = supabase
           .from('produtos')
           .select(`
@@ -122,7 +110,6 @@ const ProductList = () => {
           `, { count: 'exact' })
           .eq('ativo', true);
 
-        // Aplicar filtros usando IDs em vez de slugs
         if (brandIds.length > 0) {
           query = query.in('marca_id', brandIds);
         }
@@ -131,7 +118,6 @@ const ProductList = () => {
           query = query.in('categoria_id', categoryIds);
         }
 
-        // Resto do código de filtro permanece igual
         if (activeFilters.gender.length > 0) {
           query = query.in('genero', activeFilters.gender);
         }
@@ -140,7 +126,6 @@ const ProductList = () => {
           query = query.eq('estado', activeFilters.condition);
         }
 
-        // Filtro de preço
         if (activeFilters.price) {
           switch (activeFilters.price) {
             case 'Até R$50':
@@ -160,15 +145,12 @@ const ProductList = () => {
           }
         }
 
-        // Pesquisa por texto
         if (searchQuery) {
-          // Pesquisa de texto completo em Postgres
           query = query.textSearch('nome', searchQuery, {
             config: 'portuguese'
           });
         }
 
-        // Aplicar ordenação
         if (sortBy) {
           switch (sortBy) {
             case 'menor_preco':
@@ -183,25 +165,21 @@ const ProductList = () => {
             case 'mais_vendido':
               query = query.order('quantidade_vendas', { ascending: false });
               break;
-            default: // relevância ou default
+            default:
               query = query.order('destacado', { ascending: false }).order('quantidade_vendas', { ascending: false });
               break;
           }
         }
 
-        // Paginação
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
 
-        // Executar a consulta com intervalo para paginação
         const { data, error, count } = await query
           .range(from, to);
 
         if (error) throw error;
 
-        // Transformar os dados para o formato necessário para o ProductCard
         const formattedData = data.map(product => {
-          // Encontrar a imagem principal ou a primeira disponível
           const imagens = product.imagens_produto || [];
           const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
 
@@ -232,10 +210,8 @@ const ProductList = () => {
 
     loadProducts();
 
-    // Atualizar URL com os filtros ativos
     const newParams = new URLSearchParams();
 
-    // Adicionar filtros à URL
     activeFilters.brands.forEach(brand => newParams.append('marca', brand));
     activeFilters.categories.forEach(category => newParams.append('categoria', category));
     activeFilters.gender.forEach(gender => newParams.append('genero', gender));
@@ -250,17 +226,14 @@ const ProductList = () => {
 
   }, [activeFilters, sortBy, page, pageSize, searchQuery, setSearchParams]);
 
-  // Função para lidar com a abertura/fechamento do filtro no mobile
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
   };
 
-  // Função para aplicar um filtro
   const handleFilterChange = (category, value) => {
     setActiveFilters((prev) => {
       const updated = { ...prev };
 
-      // Lidar com arrays (checkboxes)
       if (Array.isArray(updated[category])) {
         if (updated[category].includes(value)) {
           updated[category] = updated[category].filter(
@@ -270,7 +243,6 @@ const ProductList = () => {
           updated[category] = [...updated[category], value];
         }
       }
-      // Lidar com valores únicos (radio buttons)
       else {
         updated[category] = updated[category] === value ? null : value;
       }
@@ -278,18 +250,14 @@ const ProductList = () => {
       return updated;
     });
 
-    // Resetar página ao aplicar filtro
     setPage(1);
   };
 
-  // Função para lidar com a ordenação
   const handleSortChange = (event) => {
     setSortBy(event.target.value);
-    // Resetar página ao mudar ordenação
     setPage(1);
   };
 
-  // Limpar todos os filtros
   const clearAllFilters = () => {
     setActiveFilters({
       brands: [],
@@ -300,17 +268,14 @@ const ProductList = () => {
     });
     setPage(1);
 
-    // Limpar URL
     navigate('/produtos');
   };
 
-  // Lidar com mudança de página
   const handlePageChange = (newPage) => {
     setPage(newPage);
     window.scrollTo(0, 0);
   };
 
-  // Construir título dinâmico baseado nos filtros
   const getPageTitle = () => {
     if (searchQuery) {
       return `Resultados para "${searchQuery}"`;
@@ -333,7 +298,6 @@ const ProductList = () => {
     <Layout>
       <main className="flex-grow bg-gray-50">
         <div className="container mx-auto px-4 py-6">
-          {/* Breadcrumb */}
           <div className="flex items-center text-sm text-gray-500 mb-6">
             <Link to="/" className="hover:text-pink-600 transition-colors">
               Home
@@ -342,7 +306,6 @@ const ProductList = () => {
             <span className="text-gray-900 font-medium">Produtos</span>
           </div>
 
-          {/* Título da página com contador de resultados e ordenação */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
               <h1 className="text-xl font-medium">{getPageTitle()}</h1>
@@ -351,9 +314,7 @@ const ProductList = () => {
               </span>
             </div>
 
-            {/* Linha de ordenação e filtro mobile (agora na mesma linha) */}
             <div className="flex items-center w-full md:w-auto justify-between">
-              {/* Dropdown de ordenação */}
               <div className="relative flex items-center">
                 <label htmlFor="sort" className="text-sm text-gray-500 mr-2">
                   Ordenar por:
@@ -377,7 +338,6 @@ const ProductList = () => {
                 </div>
               </div>
 
-              {/* Botão filtro mobile - ícone e na cor rosa */}
               <button
                 onClick={toggleFilter}
                 className="md:hidden bg-pink-600 text-white p-2 rounded-md hover:bg-pink-700 transition-colors"
@@ -389,10 +349,8 @@ const ProductList = () => {
           </div>
 
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Sidebar de filtros para desktop */}
             <aside className="hidden md:block w-64 flex-shrink-0">
               <div className="bg-white rounded-md shadow-sm p-4">
-                {/* Título com linha divisória abaixo */}
                 <div className="flex justify-between items-center">
                   <h2 className="font-medium mb-4 pb-3 border-b border-gray-200 w-full">Filtrar por</h2>
                   {activeFilters.brands.length > 0 ||
@@ -409,7 +367,6 @@ const ProductList = () => {
                   ) : null}
                 </div>
 
-                {/* Filtro por marca */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium mb-3">Marca</h3>
                   <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
@@ -430,7 +387,6 @@ const ProductList = () => {
                   </div>
                 </div>
 
-                {/* Filtro por categoria */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium mb-3">Categoria</h3>
                   <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
@@ -451,7 +407,6 @@ const ProductList = () => {
                   </div>
                 </div>
 
-                {/* Filtro por preço */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium mb-3">Preço</h3>
                   <div className="space-y-2">
@@ -478,7 +433,6 @@ const ProductList = () => {
                   </div>
                 </div>
 
-                {/* Filtro por gênero */}
                 <div className="mb-6">
                   <h3 className="text-sm font-medium mb-3">Gênero</h3>
                   <div className="space-y-2">
@@ -496,7 +450,6 @@ const ProductList = () => {
                   </div>
                 </div>
 
-                {/* Filtro por estado */}
                 <div>
                   <h3 className="text-sm font-medium mb-3">Estado</h3>
                   <div className="space-y-2">
@@ -520,7 +473,6 @@ const ProductList = () => {
               </div>
             </aside>
 
-            {/* Área principal com produtos */}
             <div className="flex-grow">
               {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
@@ -555,7 +507,6 @@ const ProductList = () => {
                 <div>
                   <ProductCard produtos={products} />
 
-                  {/* Paginação */}
                   {productCount > pageSize && (
                     <div className="mt-8 flex justify-center">
                       <div className="flex space-x-2">
@@ -578,8 +529,8 @@ const ProductList = () => {
                               key={pageNumber}
                               onClick={() => handlePageChange(pageNumber)}
                               className={`px-4 py-2 border rounded-md ${pageNumber === page
-                                  ? 'bg-pink-600 text-white border-pink-600'
-                                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                ? 'bg-pink-600 text-white border-pink-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                                 }`}
                             >
                               {pageNumber}
@@ -605,7 +556,6 @@ const ProductList = () => {
         </div>
       </main>
 
-      {/* Filtro mobile - aparece abaixo do botão como um dropdown */}
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={toggleFilter}></div>
@@ -618,8 +568,6 @@ const ProductList = () => {
                 </button>
               </div>
 
-              {/* Filtros mobile - mesmo conteúdo que o desktop */}
-              {/* Filtro por marca */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium mb-3">Marca</h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
@@ -637,7 +585,6 @@ const ProductList = () => {
                 </div>
               </div>
 
-              {/* Categoria */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium mb-3">Categoria</h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
@@ -658,7 +605,6 @@ const ProductList = () => {
                 </div>
               </div>
 
-              {/* Preço */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium mb-3">Preço</h3>
                 <div className="space-y-2">
@@ -685,7 +631,6 @@ const ProductList = () => {
                 </div>
               </div>
 
-              {/* Gênero */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium mb-3">Gênero</h3>
                 <div className="space-y-2">
@@ -703,7 +648,6 @@ const ProductList = () => {
                 </div>
               </div>
 
-              {/* Estado */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium mb-3">Estado</h3>
                 <div className="space-y-2">
@@ -725,7 +669,6 @@ const ProductList = () => {
                 </div>
               </div>
 
-              {/* Botão para limpar filtros - único botão */}
               <div className="mt-6">
                 <button
                   className="w-full py-2 text-white bg-pink-600 rounded-md hover:bg-pink-700 transition-colors"

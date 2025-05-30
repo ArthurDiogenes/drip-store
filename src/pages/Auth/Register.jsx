@@ -1,4 +1,3 @@
-// src/pages/Auth/Register.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/layout/AuthLayout';
@@ -11,40 +10,37 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isStoring, setIsStoring] = useState(false);
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    
-    // Basic validation
+
     if (!email.trim()) {
       setError('Por favor, insira um email válido.');
       return;
     }
-    
+
     if (!password.trim()) {
       setError('Por favor, insira uma senha.');
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setError('As senhas não coincidem.');
       return;
     }
-    
+
     if (password.length < 8) {
       setError('A senha deve ter pelo menos 8 caracteres.');
       return;
     }
-    
+
     try {
       setIsStoring(true);
-      
-      // Store registration data in sessionStorage (more secure than localStorage for sensitive data)
+
       sessionStorage.setItem('registerEmail', email);
       sessionStorage.setItem('registerPassword', password);
-      
-      // Use React Router for navigation
+
       navigate('/cadastro/formulario');
     } catch (err) {
       console.error('Error storing registration data:', err);
@@ -52,7 +48,7 @@ const Register = () => {
       setIsStoring(false);
     }
   };
-  
+
   return (
     <AuthLayout>
       <div className={styles.registerContainer}>
@@ -62,14 +58,12 @@ const Register = () => {
             Já possui uma conta? Entre <Link to="/login" className={styles.loginLink}>aqui</Link>.
           </p>
 
-          {/* Error display */}
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
               {error}
             </div>
           )}
 
-          {/* Registration form */}
           <form onSubmit={handleSubmit} className={styles.registerForm}>
             <div className={styles.formGroup}>
               <label htmlFor="email" className={styles.label}>Email *</label>
@@ -114,9 +108,8 @@ const Register = () => {
               />
             </div>
 
-            {/* Submit button */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className={styles.registerButton}
               disabled={isStoring}
             >
@@ -137,7 +130,6 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Product image - only shown on desktop */}
         <div className={styles.productImage}>
           <img src="../images/login-shoes.png" alt="Tênis" />
         </div>

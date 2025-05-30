@@ -18,7 +18,6 @@ const PaymentMethods = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // For individual card actions
 
-  // Load payment methods
   useEffect(() => {
     const loadPaymentMethods = async () => {
       if (!user) return;
@@ -40,7 +39,6 @@ const PaymentMethods = () => {
     loadPaymentMethods();
   }, [user]);
 
-  // Handle setting a card as default
   const handleSetDefault = async (methodId) => {
     if (!user || actionLoading) return;
 
@@ -50,7 +48,6 @@ const PaymentMethods = () => {
 
       await setDefaultPaymentMethod(user.id, methodId);
 
-      // Update local state
       setPaymentMethods(prev =>
         prev.map(method => ({
           ...method,
@@ -66,11 +63,9 @@ const PaymentMethods = () => {
     }
   };
 
-  // Handle removing a card
   const handleRemoveCard = async (methodId) => {
     if (!user || actionLoading) return;
 
-    // Confirm before removing
     if (!window.confirm('Tem certeza que deseja remover este cartão?')) {
       return;
     }
@@ -81,7 +76,6 @@ const PaymentMethods = () => {
 
       await removePaymentMethod(user.id, methodId);
 
-      // Update local state
       setPaymentMethods(prev => prev.filter(method => method.id !== methodId));
 
     } catch (err) {
@@ -92,16 +86,13 @@ const PaymentMethods = () => {
     }
   };
 
-  // Format card expiry date
   const formatExpiryDate = (dateString) => {
     if (!dateString) return 'N/A';
 
-    // Handle different date formats
     if (dateString.includes('/')) {
-      return dateString; // Already formatted
+      return dateString;
     }
 
-    // If it's in YYYY-MM format, convert to MM/YY
     if (dateString.includes('-')) {
       const [year, month] = dateString.split('-');
       return `${month}/${year.slice(-2)}`;
@@ -110,7 +101,6 @@ const PaymentMethods = () => {
     return dateString;
   };
 
-  // Get card brand icon/text (improved display)
   const getCardBrandDisplay = (brand) => {
     switch (brand?.toLowerCase()) {
       case 'visa':
@@ -126,7 +116,6 @@ const PaymentMethods = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <Layout>
@@ -158,12 +147,10 @@ const PaymentMethods = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className={styles.pageContainer}>
-          {/* Account Sidebar */}
           <div className={styles.sidebarContainer}>
             <AccountSidebar />
           </div>
 
-          {/* Payment Methods Content */}
           <div className={styles.contentContainer}>
             <div className={styles.headerContainer}>
               <h1 className={styles.pageTitle}>Métodos de Pagamento</h1>
@@ -172,7 +159,6 @@ const PaymentMethods = () => {
               </Link>
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
                 {error}
@@ -258,7 +244,6 @@ const PaymentMethods = () => {
               )}
             </div>
 
-            {/* Information Box */}
             <div className={styles.infoBox}>
               <h4 className={styles.infoTitle}>Informações sobre segurança</h4>
               <p className={styles.infoText}>

@@ -20,7 +20,6 @@ import { getFeaturedProducts } from '../../services/productService';
 import { getShippingCost } from '../../services/shippingService';
 import styles from './Cart.module.css';
 
-// Toast Component
 const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 }) => {
   useEffect(() => {
     if (isVisible) {
@@ -99,7 +98,6 @@ const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 
   );
 };
 
-// Confirmation Modal Component
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirmar", type = "danger" }) => {
   if (!isOpen) return null;
 
@@ -160,30 +158,26 @@ const Cart = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { refreshCart } = useCart();
-  
-  // State management
+
   const [cartItems, setCartItems] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [cartId, setCartId] = useState(null);
-  
-  // Cart calculations
+
   const [subtotal, setSubtotal] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [shipping, setShipping] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [shippingInfo, setShippingInfo] = useState(null);
 
-  // Toast state
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
     type: 'success'
   });
 
-  // Confirmation modal state
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -192,17 +186,14 @@ const Cart = () => {
     type: 'danger'
   });
 
-  // Load cart data on component mount
   useEffect(() => {
     loadCartData();
   }, [user]);
 
-  // Recalculate subtotal when items change
   useEffect(() => {
     calculateSubtotal();
   }, [cartItems]);
 
-  // Toast helper functions
   const showToast = (message, type = 'success') => {
     setToast({
       isVisible: true,
@@ -215,7 +206,6 @@ const Cart = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  // Confirmation modal helper functions
   const showConfirmation = (title, message, onConfirm, type = 'danger') => {
     setConfirmModal({
       isOpen: true,
@@ -243,18 +233,15 @@ const Cart = () => {
     handleCloseConfirmation();
   };
 
-  // Load cart data
   const loadCartData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get or create cart
       const currentCartId = await getCart(user?.id);
       setCartId(currentCartId);
 
       if (currentCartId) {
-        // Load cart items
         const items = await getCartItems(currentCartId);
         console.log('Cart items loaded:', items);
         setCartItems(items);
@@ -262,7 +249,6 @@ const Cart = () => {
         setCartItems([]);
       }
 
-      // Load featured products for recommendations
       try {
         const featured = await getFeaturedProducts(4);
         setRelatedProducts(featured);
@@ -281,16 +267,14 @@ const Cart = () => {
     }
   };
 
-  // Calculate subtotal
   const calculateSubtotal = () => {
     const total = cartItems.reduce(
-      (sum, item) => sum + (item.produto.precoAtual * item.quantidade), 
+      (sum, item) => sum + (item.produto.precoAtual * item.quantidade),
       0
     );
     setSubtotal(total);
   };
 
-  // Handle quantity change
   const handleQuantityChange = async (itemId, newQuantity) => {
     if (actionLoading === itemId || newQuantity < 1) return;
 
@@ -298,17 +282,14 @@ const Cart = () => {
       setActionLoading(itemId);
       setError(null);
 
-      // Update in database
       await updateCartItemQuantity(itemId, newQuantity);
 
-      // Update local state
       setCartItems(prevItems =>
         prevItems.map(item =>
           item.id === itemId ? { ...item, quantidade: newQuantity } : item
         )
       );
 
-      // Refresh cart context
       refreshCart();
 
       showToast('Quantidade atualizada com sucesso!', 'success');
@@ -322,12 +303,11 @@ const Cart = () => {
     }
   };
 
-  // Handle item removal with confirmation
   const handleRemoveItem = async (itemId) => {
     if (actionLoading === itemId) return;
 
     const itemToRemove = cartItems.find(item => item.id === itemId);
-    
+
     showConfirmation(
       'Remover item',
       `Tem certeza que deseja remover "${itemToRemove?.produto?.nome}" do carrinho?`,
@@ -336,13 +316,10 @@ const Cart = () => {
           setActionLoading(itemId);
           setError(null);
 
-          // Remove from database
           await removeCartItem(itemId);
 
-          // Update local state
           setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
 
-          // Refresh cart context
           refreshCart();
 
           showToast('Item removido do carrinho', 'success');
@@ -359,15 +336,13 @@ const Cart = () => {
     );
   };
 
-  // Handle discount code application
   const handleApplyDiscount = async (discountData) => {
     console.log('Applying discount:', discountData);
-    
+
     if (discountData.code && discountData.discount > 0) {
       setAppliedCoupon(discountData.couponData);
       setDiscount(discountData.discount);
-      
-      // If free shipping coupon is applied
+
       if (discountData.freeShipping && shippingInfo) {
         setShipping(0);
         setShippingInfo({
@@ -378,13 +353,10 @@ const Cart = () => {
         });
       }
     } else {
-      // Remove discount
       setAppliedCoupon(null);
       setDiscount(0);
-      
-      // Recalculate shipping if coupon provided free shipping
+
       if (shippingInfo && shippingInfo.isFree && subtotal < 200) {
-        // Need to recalculate shipping without coupon
         if (shippingInfo.zipCode) {
           try {
             const newShipping = await getShippingCost(shippingInfo.zipCode, subtotal, false);
@@ -401,32 +373,30 @@ const Cart = () => {
     }
   };
 
-  // Handle shipping calculation
   const handleCalculateShipping = async (shippingData) => {
     console.log('Calculating shipping:', shippingData);
-    
+
     try {
-      // Check if free shipping should be applied
       const shouldApplyFreeShipping = appliedCoupon?.freeShipping || subtotal >= 200;
-      
+
       let finalShippingCost = shippingData.cost;
       let finalShippingInfo = { ...shippingData };
-      
+
       if (shouldApplyFreeShipping && shippingData.cost > 0) {
         finalShippingCost = 0;
         finalShippingInfo = {
           ...shippingData,
           cost: 0,
           isFree: true,
-          description: appliedCoupon?.freeShipping 
-            ? 'Frete grátis por cupom' 
+          description: appliedCoupon?.freeShipping
+            ? 'Frete grátis por cupom'
             : 'Frete grátis (compra acima de R$ 200)'
         };
       }
-      
+
       setShippingInfo(finalShippingInfo);
       setShipping(finalShippingCost);
-      
+
     } catch (error) {
       console.error('Error in handleCalculateShipping:', error);
       setError('Erro ao calcular frete.');
@@ -434,7 +404,6 @@ const Cart = () => {
     }
   };
 
-  // Handle checkout
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       showToast('Seu carrinho está vazio. Adicione produtos antes de finalizar a compra.', 'error');
@@ -453,7 +422,6 @@ const Cart = () => {
       return;
     }
 
-    // Store cart summary for checkout
     const checkoutData = {
       items: cartItems,
       subtotal,
@@ -466,13 +434,12 @@ const Cart = () => {
 
     console.log('Proceeding to checkout with data:', checkoutData);
     showToast('Redirecionando para o checkout...', 'info');
-    
+
     setTimeout(() => {
       navigate('/checkout', { state: { checkoutData } });
     }, 1000);
   };
 
-  // Handle clear cart with confirmation
   const handleClearCart = async () => {
     if (!cartId || cartItems.length === 0) return;
 
@@ -485,8 +452,7 @@ const Cart = () => {
           setError(null);
 
           await clearCart(cartId);
-          
-          // Reset all state
+
           setCartItems([]);
           setSubtotal(0);
           setDiscount(0);
@@ -494,7 +460,6 @@ const Cart = () => {
           setAppliedCoupon(null);
           setShippingInfo(null);
 
-          // Refresh cart context
           refreshCart();
 
           showToast('Carrinho esvaziado com sucesso', 'success');
@@ -511,7 +476,6 @@ const Cart = () => {
     );
   };
 
-  // Loading state
   if (loading) {
     return (
       <Layout>
@@ -545,7 +509,6 @@ const Cart = () => {
 
   return (
     <Layout>
-      {/* Toast Notification */}
       <Toast
         message={toast.message}
         type={toast.type}
@@ -553,7 +516,6 @@ const Cart = () => {
         onClose={handleCloseToast}
       />
 
-      {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
         onClose={handleCloseConfirmation}
@@ -565,7 +527,6 @@ const Cart = () => {
 
       <div className="container mx-auto px-4 py-8">
         {cartItems.length === 0 ? (
-          // Empty cart state
           <div className={styles.emptyCart}>
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🛒</div>
@@ -583,7 +544,6 @@ const Cart = () => {
               </button>
             </div>
 
-            {/* Show featured products for empty cart */}
             {relatedProducts.length > 0 && (
               <div className={styles.relatedProducts}>
                 <div className={styles.relatedProductsHeader}>
@@ -600,9 +560,7 @@ const Cart = () => {
             )}
           </div>
         ) : (
-          // Cart with items
           <>
-            {/* Cart Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div>
                 <h1 className={styles.pageTitle}>MEU CARRINHO</h1>
@@ -622,7 +580,6 @@ const Cart = () => {
               )}
             </div>
 
-            {/* Error Alert */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-6">
                 <div className="flex items-center justify-between">
@@ -638,9 +595,7 @@ const Cart = () => {
             )}
 
             <div className={styles.cartContent}>
-              {/* Cart Main Section */}
               <div className={styles.cartMain}>
-                {/* Desktop Cart Header */}
                 <div className={styles.cartHeader}>
                   <div className={styles.productHeader}>PRODUTO</div>
                   <div className={styles.quantityHeader}>QUANTIDADE</div>
@@ -648,7 +603,6 @@ const Cart = () => {
                   <div className={styles.totalHeader}>TOTAL</div>
                 </div>
 
-                {/* Cart Items */}
                 <div className="space-y-4">
                   {cartItems.map(item => (
                     <CartItem
@@ -670,17 +624,16 @@ const Cart = () => {
                   ))}
                 </div>
 
-                {/* Discount and Shipping Controls */}
                 <div className={styles.discountAndShipping}>
                   <div className={styles.discountSection}>
-                    <DiscountCode 
+                    <DiscountCode
                       onApplyDiscount={handleApplyDiscount}
                       cartTotal={subtotal}
                       onMessage={showToast}
                     />
                   </div>
                   <div className={styles.shippingSection}>
-                    <ShippingCalculator 
+                    <ShippingCalculator
                       onCalculateShipping={handleCalculateShipping}
                       cartTotal={subtotal}
                       freeShippingApplied={appliedCoupon?.freeShipping || false}
@@ -689,7 +642,6 @@ const Cart = () => {
                   </div>
                 </div>
 
-                {/* Applied Benefits Summary */}
                 {(appliedCoupon || shippingInfo || subtotal >= 200) && (
                   <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
                     <h4 className="text-sm font-medium text-green-800 mb-2">
@@ -720,7 +672,6 @@ const Cart = () => {
                 )}
               </div>
 
-              {/* Cart Summary Sidebar */}
               <div className={styles.cartSummary}>
                 <CartSummary
                   subtotal={subtotal}
@@ -731,7 +682,6 @@ const Cart = () => {
               </div>
             </div>
 
-            {/* Related Products */}
             {relatedProducts.length > 0 && (
               <div className={styles.relatedProducts}>
                 <div className={styles.relatedProductsHeader}>
