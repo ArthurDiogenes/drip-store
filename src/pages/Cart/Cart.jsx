@@ -404,6 +404,7 @@ const Cart = () => {
     }
   };
 
+  // Handle checkout
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       showToast('Seu carrinho está vazio. Adicione produtos antes de finalizar a compra.', 'error');
@@ -433,10 +434,27 @@ const Cart = () => {
     };
 
     console.log('Proceeding to checkout with data:', checkoutData);
+    
+    try {
+      localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+    } catch (err) {
+      console.error('Error saving checkout data to localStorage:', err);
+    }
+    
     showToast('Redirecionando para o checkout...', 'info');
 
     setTimeout(() => {
-      navigate('/checkout', { state: { checkoutData } });
+      navigate('/checkout', { 
+        state: { 
+          checkoutData: checkoutData,
+          cartItems,
+          subtotal,
+          discount,
+          shipping,
+          appliedCoupon,
+          shippingInfo
+        }
+      });
     }, 1000);
   };
 
