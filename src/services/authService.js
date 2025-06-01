@@ -1,4 +1,3 @@
-// src/services/authService.js
 import { supabase } from './supabase';
 
 /**
@@ -13,13 +12,11 @@ export const signUp = async (email, password, userData) => {
     console.log('Starting signup process for:', email);
     console.log('User data:', { ...userData, cpf: userData.cpf ? '[HIDDEN]' : undefined });
 
-    // Validate email format before sending to Supabase
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new Error('Invalid email format');
     }
 
-    // 1. Register the user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
@@ -35,19 +32,18 @@ export const signUp = async (email, password, userData) => {
 
     console.log('Auth signup successful:', authData);
 
-    // 2. Create the user profile with additional data
     if (authData?.user) {
       try {
         const profileData = {
           id: authData.user.id,
           nome_completo: userData.nome?.trim(),
-          cpf: userData.cpf?.replace(/\D/g, ''), // Remove formatting, store only numbers
-          celular: userData.celular?.replace(/\D/g, ''), // Remove formatting
+          cpf: userData.cpf?.replace(/\D/g, ''),
+          celular: userData.celular?.replace(/\D/g, ''),
           endereco: userData.endereco?.trim(),
           bairro: userData.bairro?.trim(),
           cidade: userData.cidade?.trim(),
           estado: userData.estado?.trim(),
-          cep: userData.cep?.replace(/\D/g, ''), // Remove formatting
+          cep: userData.cep?.replace(/\D/g, ''),
           complemento: userData.complemento?.trim() || null,
           receber_ofertas: userData.receberOfertas || false
         };
@@ -62,15 +58,12 @@ export const signUp = async (email, password, userData) => {
 
         if (profileError) {
           console.error('Error creating user profile:', profileError);
-          // If profile creation fails, we might want to delete the auth user
-          // but for now just log it and continue
           console.warn('Profile creation failed, but authentication succeeded');
         } else {
           console.log('Profile created successfully:', profileResult);
         }
       } catch (profileError) {
         console.error('Exception creating user profile:', profileError);
-        // Continue with authentication anyway
       }
     }
 
@@ -81,7 +74,6 @@ export const signUp = async (email, password, userData) => {
   } catch (error) {
     console.error('SignUp error:', error);
     
-    // Provide more user-friendly error messages
     if (error.message?.includes('Invalid email')) {
       throw new Error('Email inválido. Por favor, verifique o formato do email.');
     } else if (error.message?.includes('Password')) {

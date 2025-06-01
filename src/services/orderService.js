@@ -1,14 +1,11 @@
-// src/services/orderService.js
 import { supabase } from './supabase';
 
-// Generate order code
 const generateOrderCode = () => {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   return `${timestamp}${random}`;
 };
 
-// Create a new order
 export const createOrder = async (orderData) => {
   try {
     console.log('Creating order with data:', orderData);
@@ -44,7 +41,6 @@ export const createOrder = async (orderData) => {
     
     console.log('Order created:', order);
     
-    // Add order items
     if (orderData.items && orderData.items.length > 0) {
       const orderItems = orderData.items.map(item => ({
         pedido_id: order.id,
@@ -61,7 +57,6 @@ export const createOrder = async (orderData) => {
       
       if (itemsError) {
         console.error('Error creating order items:', itemsError);
-        // Try to delete the order if items creation failed
         await supabase.from('pedidos').delete().eq('id', order.id);
         throw itemsError;
       }
@@ -78,7 +73,6 @@ export const createOrder = async (orderData) => {
   }
 };
 
-// Get user orders
 export const getUserOrders = async (userId) => {
   try {
     const { data, error } = await supabase
@@ -106,14 +100,12 @@ export const getUserOrders = async (userId) => {
     
     if (error) throw error;
     
-    // Transform data for display
     return data.map(order => {
       const firstItem = order.itens_pedido[0];
       const product = firstItem?.produto_id;
       const images = product?.imagens_produto || [];
       const principalImage = images.find(img => img.principal) || images[0];
       
-      // Map status to display format
       let statusType = 'default';
       if (order.status === 'Em Trânsito') statusType = 'transit';
       else if (order.status === 'Entregue' || order.status === 'Finalizado') statusType = 'completed';
@@ -125,7 +117,7 @@ export const getUserOrders = async (userId) => {
         productName: product?.nome || 'Produto não encontrado',
         productImage: principalImage?.url || '../images/products/produc-image-0.png',
         status: statusType,
-        statusText: order.status, // Add the actual status text
+        statusText: order.status,
         totalValue: order.valor_total,
         createdAt: order.data_criacao
       };
@@ -137,7 +129,6 @@ export const getUserOrders = async (userId) => {
   }
 };
 
-// Update order status
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
     const { data, error } = await supabase
@@ -156,7 +147,6 @@ export const updateOrderStatus = async (orderId, newStatus) => {
   }
 };
 
-// Get order by ID
 export const getOrderById = async (orderId) => {
   try {
     const { data, error } = await supabase
