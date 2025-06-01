@@ -8,22 +8,32 @@
   white-space: nowrap;
 }
 
+.pending {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.processing {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
 .transit {
   background-color: #fffbeb;
   color: #d97706;
 }
 
 .completed {
-  background-color: #f0fdf4; 
-  color: #16a34a; 
+  background-color: #f0fdf4;
+  color: #16a34a;
 }
 
 .canceled {
-  background-color: #fef2f2; 
-  color: #dc2626; 
+  background-color: #fef2f2;
+  color: #dc2626;
 }
 
 .default {
-  background-color: #f3f4f6; 
-  color: #6b7280; 
+  background-color: #f3f4f6;
+  color: #6b7280;
 }

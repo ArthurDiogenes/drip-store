@@ -7,6 +7,10 @@ const OrderItem = ({ orderId, productName, productImage, status, statusText }) =
     const displayText = statusText || getStatusText(status);
     
     switch (status) {
+      case 'pending':
+        return <StatusBadge status={displayText} type="pending" />;
+      case 'processing':
+        return <StatusBadge status={displayText} type="processing" />;
       case 'transit':
         return <StatusBadge status={displayText} type="transit" />;
       case 'completed':
@@ -20,6 +24,10 @@ const OrderItem = ({ orderId, productName, productImage, status, statusText }) =
 
   const getStatusText = (statusType) => {
     switch (statusType) {
+      case 'pending':
+        return 'Aguardando Pagamento';
+      case 'processing':
+        return 'Em Preparação';
       case 'transit':
         return 'Em Trânsito';
       case 'completed':
