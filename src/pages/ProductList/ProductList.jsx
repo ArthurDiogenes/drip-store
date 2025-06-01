@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronRight, X, Filter, ChevronDown } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom"; // Removido useNavigate
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "../../services/supabase";
 import Layout from "../../components/layout/Layout";
 import ProductCard from "../../components/ProductCard/ProductCard";
@@ -8,7 +8,6 @@ import styles from "./ProductList.module.css";
 
 const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  // const navigate = useNavigate(); // Removido
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [products, setProducts] = useState([]);
@@ -23,13 +22,13 @@ const ProductList = () => {
     gender: [],
     condition: null,
   });
-
   const [sortBy, setSortBy] = useState("relevancia");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
 
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+
   const searchQuery = searchParams.get("q") || "";
 
   const normalizeText = (text) => {
@@ -43,20 +42,15 @@ const ProductList = () => {
   const createSearchVariations = (term) => {
     const normalized = normalizeText(term);
     const words = normalized.split(" ").filter((word) => word.length > 1);
-    const variations = [];
-    variations.push(normalized);
+    const variations = [normalized];
     words.forEach((word) => {
-      if (word.endsWith("s") && word.length > 3) {
+      if (word.endsWith("s") && word.length > 3)
         variations.push(word.slice(0, -1));
-      }
-      if (word.endsWith("es") && word.length > 4) {
+      if (word.endsWith("es") && word.length > 4)
         variations.push(word.slice(0, -2));
-      }
       if (!word.endsWith("s")) {
         variations.push(word + "s");
-        if (!/[aeiou]$/.test(word)) {
-          variations.push(word + "es");
-        }
+        if (!/[aeiou]$/.test(word)) variations.push(word + "es");
       }
       const specialCases = {
         tenis: ["tenis", "tennis"],
@@ -71,9 +65,7 @@ const ProductList = () => {
         headphone: ["headphone", "headphones", "fone", "fones"],
         headphones: ["headphone", "headphones", "fone", "fones"],
       };
-      if (specialCases[word]) {
-        variations.push(...specialCases[word]);
-      }
+      if (specialCases[word]) variations.push(...specialCases[word]);
     });
     return [...new Set(variations)];
   };
@@ -107,6 +99,8 @@ const ProductList = () => {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
+    setProducts([]);
     setActiveFilters({
       brands: searchParams.getAll("marca") || [],
       categories: searchParams.getAll("categoria") || [],
@@ -119,26 +113,28 @@ const ProductList = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    const loadProducts = async () => {
+    const fetchProductsData = async () => {
       try {
-        setLoading(true);
-
         const currentCategorySlugs = activeFilters.categories;
         const currentBrandSlugs = activeFilters.brands;
-        const currentGenderFilters = activeFilters.gender;
-        const currentConditionFilter = activeFilters.condition;
-        const currentPriceFilter = activeFilters.price;
 
         let categoryIds = [];
-        let brandIds = [];
-
-        if (currentCategorySlugs.length > 0 && categories.length > 0) {
+        if (currentCategorySlugs.length > 0) {
+          if (categories.length === 0) {
+            setLoading(true);
+            return;
+          }
           categoryIds = categories
             .filter((cat) => currentCategorySlugs.includes(cat.slug))
             .map((cat) => cat.id);
         }
 
-        if (currentBrandSlugs.length > 0 && brands.length > 0) {
+        let brandIds = [];
+        if (currentBrandSlugs.length > 0) {
+          if (brands.length === 0) {
+            setLoading(true);
+            return;
+          }
           brandIds = brands
             .filter((brand) => currentBrandSlugs.includes(brand.slug))
             .map((brand) => brand.id);
@@ -147,30 +143,34 @@ const ProductList = () => {
         let query = supabase
           .from("produtos")
           .select(
-            `
-            id, nome, slug, preco_original, preco_promocional,
+            `id, nome, slug, preco_original, preco_promocional,
             desconto_porcentagem, categoria_id (id, nome, slug),
             marca_id (id, nome, slug), genero, estado, descricao,
-            imagens_produto (id, url, principal, ordem)
-            `,
+            imagens_produto (id, url, principal, ordem)`,
             { count: "exact" }
           )
           .eq("ativo", true);
 
-        if (brandIds.length > 0) {
-          query = query.in("marca_id", brandIds);
+        if (currentBrandSlugs.length > 0) {
+          query = query.in(
+            "marca_id",
+            brandIds.length > 0 ? brandIds : ["dummy-nonexistent-id"]
+          );
         }
-        if (categoryIds.length > 0) {
-          query = query.in("categoria_id", categoryIds);
+        if (currentCategorySlugs.length > 0) {
+          query = query.in(
+            "categoria_id",
+            categoryIds.length > 0 ? categoryIds : ["dummy-nonexistent-id"]
+          );
         }
-        if (currentGenderFilters.length > 0) {
-          query = query.in("genero", currentGenderFilters);
-        }
-        if (currentConditionFilter) {
-          query = query.eq("estado", currentConditionFilter);
-        }
-        if (currentPriceFilter) {
-          switch (currentPriceFilter) {
+
+        if (activeFilters.gender.length > 0)
+          query = query.in("genero", activeFilters.gender);
+        if (activeFilters.condition)
+          query = query.eq("estado", activeFilters.condition);
+
+        if (activeFilters.price) {
+          switch (activeFilters.price) {
             case "Até R$50":
               query = query.lt("preco_promocional", 50);
               break;
@@ -199,28 +199,25 @@ const ProductList = () => {
             searchConditions.push(`nome.ilike.%${variation}%`);
             searchConditions.push(`descricao.ilike.%${variation}%`);
           });
-
           if (categories.length > 0) {
-            const matchingCategories = categories.filter((category) => {
-              const normalizedCategoryName = normalizeText(category.nome);
+            const matchingCategories = categories.filter((cat) => {
+              const normalizedCategoryName = normalizeText(cat.nome);
               return searchVariations.some(
-                (variation) =>
-                  normalizedCategoryName.includes(variation) ||
-                  variation.includes(normalizedCategoryName)
+                (v) =>
+                  normalizedCategoryName.includes(v) ||
+                  v.includes(normalizedCategoryName)
               );
             });
             if (matchingCategories.length > 0) {
-              const matchedCategoryIds = matchingCategories.map(
-                (cat) => cat.id
-              );
               searchConditions.push(
-                `categoria_id.in.(${matchedCategoryIds.join(",")})`
+                `categoria_id.in.(${matchingCategories
+                  .map((c) => c.id)
+                  .join(",")})`
               );
             }
           }
-          if (searchConditions.length > 0) {
+          if (searchConditions.length > 0)
             query = query.or(searchConditions.join(","));
-          }
         }
 
         if (sortBy) {
@@ -302,17 +299,29 @@ const ProductList = () => {
           "Não foi possível carregar os produtos. Tente novamente mais tarde."
         );
         setProducts([]);
+        setProductCount(0);
       } finally {
         setLoading(false);
       }
     };
 
-    if (
-      (activeFilters.categories.length === 0 || categories.length > 0) &&
-      (activeFilters.brands.length === 0 || brands.length > 0)
-    ) {
-      loadProducts();
+    const categorySlugsPresent = activeFilters.categories.length > 0;
+    const brandSlugsPresent = activeFilters.brands.length > 0;
+    const masterCategoriesReady = categories.length > 0;
+    const masterBrandsReady = brands.length > 0;
+
+    let effectivelyLoadingMasterData = false;
+    if (categorySlugsPresent && !masterCategoriesReady)
+      effectivelyLoadingMasterData = true;
+    if (brandSlugsPresent && !masterBrandsReady)
+      effectivelyLoadingMasterData = true;
+
+    if (effectivelyLoadingMasterData) {
+      if (!loading) setLoading(true);
+      return;
     }
+
+    fetchProductsData();
   }, [activeFilters, sortBy, page, pageSize, searchQuery, categories, brands]);
 
   const toggleFilter = () => {
@@ -411,7 +420,11 @@ const ProductList = () => {
             <div>
               <h1 className="text-xl font-medium">{getPageTitle()}</h1>
               <span className="text-sm text-gray-500">
-                {productCount} {productCount === 1 ? "produto" : "produtos"}
+                {loading
+                  ? "Carregando..."
+                  : `${productCount} ${
+                      productCount === 1 ? "produto" : "produtos"
+                    }`}
               </span>
             </div>
             <div className="flex items-center w-full md:w-auto justify-between">
