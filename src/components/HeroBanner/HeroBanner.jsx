@@ -5,7 +5,7 @@ import { getHeroBannerProducts } from '../../services/productService';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
-import './HeroBanner.css';
+import './HeroBanner.module.css';
 
 const HeroBannerSlide = ({
     title,
