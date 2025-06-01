@@ -7,14 +7,14 @@
 .hero-banner-swiper .custom-bullet {
   width: 8px;
   height: 8px;
-  background-color: #d1d5db; /* Cor cinza (gray-300) */
+  background-color: #d1d5db;
   opacity: 1;
   margin: 0 4px;
   transition: all 0.3s ease;
 }
 
 .hero-banner-swiper .custom-bullet-active {
-  background-color: #db2777; /* Cor rosa (pink-600) */
+  background-color: #db2777;
   opacity: 1;
   transform: scale(1.2);
 }
@@ -28,7 +28,6 @@
   margin-bottom: 20px;
 }
 
-/* Estilos específicos para mobile */
 .mobile-banner-container {
   position: relative;
   overflow: hidden;
@@ -60,7 +59,6 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* Animações melhoradas */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -70,12 +68,10 @@
   }
 }
 
-/* Badge de desconto animado */
 .hero-banner-swiper .animate-pulse {
   animation: pulse-glow 2s infinite;
 }
 
-/* Melhoramentos no desktop */
 @media (min-width: 768px) {
   .hero-banner-swiper .swiper-slide img {
     transition: transform 0.5s ease;
@@ -86,7 +82,6 @@
   }
 }
 
-/* Responsividade aprimorada */
 @media (max-width: 640px) {
   .hero-banner-image-mobile {
     max-height: 180px;
@@ -100,7 +95,6 @@
   }
 }
 
-/* Estados de carregamento */
 .hero-banner-loading {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
@@ -116,7 +110,6 @@
   }
 }
 
-/* Melhoramentos nos botões */
 .hero-banner-swiper a {
   position: relative;
   overflow: hidden;
@@ -127,7 +120,6 @@
   left: 100%;
 }
 
-/* Indicadores de navegação melhorados */
 .hero-banner-swiper .swiper-pagination {
   display: flex;
   justify-content: center;
@@ -141,13 +133,11 @@
   transform: scale(1.1);
 }
 
-/* Acessibilidade */
 .hero-banner-swiper .swiper-slide:focus {
   outline: 2px solid #db2777;
   outline-offset: 2px;
 }
 
-/* Otimização para motion-reduce */
 @media (prefers-reduced-motion: reduce) {
   .hero-banner-image-mobile,
   .hero-banner-swiper .swiper-slide img,

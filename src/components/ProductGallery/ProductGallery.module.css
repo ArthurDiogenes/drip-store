@@ -1,12 +1,9 @@
-/* components/ProductGallery/ProductGallery.module.css */
-
 .productGallery {
   width: 100%;
   max-width: 550px;
   margin: 0 auto;
 }
 
-/* Main image styles */
 .mainImageContainer {
   margin-bottom: 16px;
   border: 1px solid #e5e7eb;
@@ -35,7 +32,6 @@
   object-fit: contain;
 }
 
-/* Navigation arrow styles */
 .swiperButtonPrev,
 .swiperButtonNext {
   width: 40px;
@@ -62,7 +58,6 @@
   right: 10px;
 }
 
-/* Thumbnail styles */
 .thumbnailContainer {
   width: 100%;
 }
@@ -84,9 +79,8 @@
   background-color: white;
 }
 
-/* This targets the active slide from Swiper */
 :global(.swiper-slide-thumb-active) .thumbnailWrapper {
-  border-color: #db2777; /* Pink color for active thumbnail, matching your prototype */
+  border-color: #db2777;
 }
 
 .thumbnailImage {
@@ -95,7 +89,6 @@
   object-fit: contain;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .mainSwiper {
     height: 350px;

@@ -1,6 +1,3 @@
-/* src/components/CategoryNavigation/CategoryNavigation.css */
-
-/* Efeito de transformação suave para o círculo no hover */
 .category-circle {
   transform: translateY(0);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;

@@ -1,5 +1,3 @@
-/* src/components/UserInfoSection/UserInfoSection.module.css */
-
 .section {
   background-color: white;
   border-radius: 0.25rem;
@@ -17,7 +15,7 @@
 .sectionTitle {
   font-size: 1.125rem;
   font-weight: 500;
-  color: #111827; /* Gray-900 */
+  color: #111827;
 }
 
 .actionButton {
@@ -27,6 +25,6 @@
 }
 
 .sectionContent {
-  border-top: 1px solid #e5e7eb; /* Gray-200 */
+  border-top: 1px solid #e5e7eb;
   padding-top: 1.5rem;
 }

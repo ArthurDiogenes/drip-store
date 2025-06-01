@@ -1,4 +1,3 @@
-// src/components/UserInfoSection/UserInfoSection.jsx
 import React from 'react';
 import styles from './UserInfoSection.module.css';
 

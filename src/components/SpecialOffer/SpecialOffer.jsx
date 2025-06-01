@@ -1,4 +1,3 @@
-// src/components/SpecialOffer/SpecialOffer.jsx
 import React from 'react';
 
 const SpecialOffer = ({

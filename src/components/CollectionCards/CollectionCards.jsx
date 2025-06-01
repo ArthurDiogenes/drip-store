@@ -1,4 +1,3 @@
-// src/components/CollectionCards/CollectionCards.jsx
 import React from 'react';
 
 const CollectionCard = ({
@@ -9,7 +8,6 @@ const CollectionCard = ({
 }) => {
   return (
     <div className="relative rounded-lg overflow-hidden transition-transform hover:scale-[1.02]">
-      {/* Imagem de fundo */}
       <div className="w-full">
         <img 
           src={imageUrl} 
@@ -18,17 +16,14 @@ const CollectionCard = ({
         />
       </div>
       
-      {/* Overlay para melhorar legibilidade do botão */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent"></div>
       
-      {/* Badge de desconto */}
       {discount && (
         <div className="absolute top-2 left-2 bg-lime-500 text-white text-xs font-semibold px-2 py-1 rounded">
           {discount}% OFF
         </div>
       )}
      
-      {/* Botão Comprar posicionado na parte inferior */}
       <div className="absolute bottom-4 left-4 z-10">
         <a
           href={link}
@@ -42,7 +37,6 @@ const CollectionCard = ({
 };
 
 const CollectionCards = ({ collections = [] }) => {
-  // Dados de coleções padrão caso não sejam fornecidos
   const defaultCollections = [
     {
       id: 1,
@@ -67,7 +61,6 @@ const CollectionCards = ({ collections = [] }) => {
     }
   ];
 
-  // Usa as coleções fornecidas ou as padrão
   const collectionsToRender = collections.length > 0 ? collections : defaultCollections;
 
   return (

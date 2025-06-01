@@ -1,15 +1,12 @@
-// components/ProductPrice/ProductPrice.jsx
 import React from 'react';
 
 const ProductPrice = ({ currentPrice, originalPrice }) => {
-  // Format prices to show with 2 decimal places
   const formatPrice = (price) => {
     return typeof price === 'number' 
       ? price.toFixed(2).replace('.', ',') 
       : price;
   };
 
-  // Calculate discount percentage if both prices are provided
   const discountPercentage = originalPrice && currentPrice 
     ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) 
     : null;
@@ -37,8 +34,5 @@ const ProductPrice = ({ currentPrice, originalPrice }) => {
     </div>
   );
 };
-
-// Example usage:
-// <ProductPrice currentPrice={219.00} originalPrice={319.00} />
 
 export default ProductPrice;

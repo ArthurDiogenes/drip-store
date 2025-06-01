@@ -29,7 +29,6 @@ const DiscountCode = ({ onApplyDiscount, cartTotal, onMessage }) => {
         setAppliedCoupon(result.coupon);
         setError('');
         
-        // Call parent component's callback
         if (onApplyDiscount) {
           onApplyDiscount({
             code: result.coupon.code,
@@ -39,7 +38,6 @@ const DiscountCode = ({ onApplyDiscount, cartTotal, onMessage }) => {
           });
         }
         
-        // Show success message via parent instead of alert
         if (onMessage) {
           onMessage(`Cupom "${result.coupon.code}" aplicado com sucesso!`, 'success');
         }
@@ -69,7 +67,6 @@ const DiscountCode = ({ onApplyDiscount, cartTotal, onMessage }) => {
     setAppliedCoupon(null);
     setError('');
     
-    // Notify parent to remove discount
     if (onApplyDiscount) {
       onApplyDiscount({
         code: null,
@@ -79,7 +76,6 @@ const DiscountCode = ({ onApplyDiscount, cartTotal, onMessage }) => {
       });
     }
 
-    // Show removal message via parent
     if (onMessage) {
       onMessage('Cupom removido', 'info');
     }

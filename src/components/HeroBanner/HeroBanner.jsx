@@ -1,10 +1,8 @@
-// src/components/HeroBanner/HeroBanner.jsx - Versão com mais produtos
 import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import { getHeroBannerProducts } from '../../services/productService';
 
-// Importe os estilos necessários
 import 'swiper/css';
 import 'swiper/css/pagination';
 import './HeroBanner.css';
@@ -18,16 +16,13 @@ const HeroBannerSlide = ({
     discount
 }) => (
     <div className="bg-gray-100 rounded-lg relative overflow-hidden">
-        {/* Badge de desconto - só aparece se houver desconto */}
         {discount > 0 && (
             <div className="absolute top-4 right-4 z-20 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg animate-pulse">
                 {discount}% OFF
             </div>
         )}
 
-        {/* Versão Mobile - só aparece em telas pequenas */}
         <div className="md:hidden mobile-banner-container px-4 py-8">
-            {/* Imagem no topo para mobile */}
             <div className="w-full flex justify-center mb-8">
                 <img 
                     src={imageUrl} 
@@ -40,7 +35,6 @@ const HeroBannerSlide = ({
                 />
             </div>
             
-            {/* Conteúdo de texto para mobile - centralizado */}
             <div className="w-full z-10 text-center">
                 <span className="text-pink-600 font-medium text-sm">
                     {discount > 0 ? `Oferta especial - ${discount}% OFF` : 'Melhores ofertas personalizadas'}
@@ -55,14 +49,11 @@ const HeroBannerSlide = ({
                 </a>
             </div>
             
-            {/* Padrão de pontos decorativos para mobile */}
             <div className="mobile-pattern-dots"></div>
         </div>
         
-        {/* Versão Desktop - mantida como estava antes */}
         <div className="hidden md:block">
             <div className="container mx-auto px-4 py-16 flex flex-col md:flex-row items-center">
-                {/* Conteúdo de texto */}
                 <div className="md:w-1/2 z-10">
                     <span className="text-amber-500 font-medium text-sm">
                         {discount > 0 ? `Desconto especial - ${discount}% OFF` : 'Melhores ofertas personalizadas'}
@@ -77,7 +68,6 @@ const HeroBannerSlide = ({
                     </a>
                 </div>
 
-                {/* Imagem */}
                 <div className="md:w-1/2 flex justify-center">
                     <img 
                         src={imageUrl} 
@@ -90,7 +80,6 @@ const HeroBannerSlide = ({
                     />
                 </div>
 
-                {/* Padrão de pontos decorativos */}
                 <div className="absolute top-8 right-8 w-24 h-24 bg-yellow-100 rounded-full opacity-50"></div>
                 <div className="absolute bottom-8 right-32 w-12 h-12 bg-yellow-100 rounded-full opacity-50"></div>
             </div>
@@ -107,17 +96,14 @@ const HeroBanner = ({ slides = [] }) => {
             try {
                 setLoading(true);
                 
-                // Se slides foram passados como props, use-os
                 if (slides && slides.length > 0) {
                     setBannerSlides(slides);
                 } else {
-                    // Caso contrário, busque produtos em destaque
                     const dynamicSlides = await getHeroBannerProducts(8);
                     
                     if (dynamicSlides && dynamicSlides.length > 0) {
                         setBannerSlides(dynamicSlides);
                     } else {
-                        // Fallback para slides estáticos
                         setBannerSlides(getDefaultSlides());
                     }
                 }

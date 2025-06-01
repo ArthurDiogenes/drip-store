@@ -1,5 +1,3 @@
-/* src/components/OrderItem/OrderItem.module.css */
-
 .orderItem {
   background-color: white;
   border-radius: 0.25rem;
@@ -14,7 +12,7 @@
 
 .orderNumber {
   font-size: 0.75rem;
-  color: #6b7280; /* Gray-500 */
+  color: #6b7280;
   margin-bottom: 0.75rem;
 }
 
@@ -23,7 +21,7 @@
 }
 
 .orderId {
-  color: #111827; /* Gray-900 */
+  color: #111827; 
 }
 
 .orderContent {
@@ -34,7 +32,7 @@
 .productImage {
   width: 4rem;
   height: 4rem;
-  background-color: #f3f4f6; /* Gray-100 */
+  background-color: #f3f4f6; 
   border-radius: 0.25rem;
   overflow: hidden;
   display: flex;
@@ -57,7 +55,7 @@
 .productName {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #111827; /* Gray-900 */
+  color: #111827; 
 }
 
 .orderStatus {
@@ -67,7 +65,6 @@
   padding-left: 1rem;
 }
 
-/* Responsive adjustments */
 @media (max-width: 640px) {
   .orderContent {
     flex-direction: column;

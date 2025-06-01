@@ -1,5 +1,3 @@
-/* src/components/ShippingCalculator/ShippingCalculator.module.css */
-
 .shippingContainer {
   margin: 1.5rem 0;
 }
@@ -36,8 +34,8 @@
 
 .shippingButton {
   border: none;
-  background-color: #db2777; /* Pink color */
-  color: white; /* White text */
+  background-color: #db2777;
+  color: white;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -46,7 +44,7 @@
 }
 
 .shippingButton:hover {
-  background-color: #be185d; /* Darker pink on hover */
+  background-color: #be185d;
 }
 
 @media (min-width: 768px) {

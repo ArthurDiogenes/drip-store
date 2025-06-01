@@ -1,19 +1,14 @@
-// components/ProductRating/ProductRating.jsx
 import React from 'react';
 
 const ProductRating = ({ rating, maxRating = 5, reviewCount }) => {
-  // Ensure rating is a number and between 0 and maxRating
   const normalizedRating = Math.min(Math.max(0, Number(rating) || 0), maxRating);
   
-  // Display rating with one decimal place
   const displayRating = normalizedRating.toFixed(1);
   
   return (
     <div className="flex items-center mb-4">
-      {/* Star rating */}
       <div className="flex">
         {[...Array(maxRating)].map((_, index) => {
-          // Determine if star should be filled, half-filled, or empty
           const starValue = index + 1;
           const isFilled = normalizedRating >= starValue;
           const isHalfFilled = !isFilled && normalizedRating > starValue - 1;
@@ -47,10 +42,8 @@ const ProductRating = ({ rating, maxRating = 5, reviewCount }) => {
         })}
       </div>
       
-      {/* Numeric rating */}
       <span className="ml-2 text-amber-500 font-medium">{displayRating}</span>
       
-      {/* Review count */}
       {reviewCount !== undefined && (
         <span className="ml-2 text-gray-500">
           ({reviewCount} {reviewCount === 1 ? 'avaliação' : 'avaliações'})
@@ -59,8 +52,5 @@ const ProductRating = ({ rating, maxRating = 5, reviewCount }) => {
     </div>
   );
 };
-
-// Example usage:
-// <ProductRating rating={4.7} reviewCount={90} />
 
 export default ProductRating;

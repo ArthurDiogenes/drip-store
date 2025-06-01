@@ -1,5 +1,3 @@
-/* src/components/OrdersList/OrdersList.module.css */
-
 .ordersList {
   width: 100%;
 }
@@ -7,7 +5,7 @@
 .sectionTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827; /* Gray-900 */
+  color: #111827;
   margin-bottom: 1.5rem;
 }
 
@@ -16,20 +14,20 @@
   justify-content: space-between;
   padding: 0 1rem 0.75rem 1rem;
   margin-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb; /* Gray-200 */
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .ordersInfo {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6b7280; /* Gray-500 */
+  color: #6b7280;
   text-transform: uppercase;
 }
 
 .ordersStatus {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6b7280; /* Gray-500 */
+  color: #6b7280;
   text-transform: uppercase;
 }
 
@@ -42,14 +40,14 @@
   border-radius: 0.25rem;
   padding: 3rem 2rem;
   text-align: center;
-  color: #6b7280; /* Gray-500 */
+  color: #6b7280;
 }
 
 .shopButton {
   display: inline-block;
   margin-top: 1rem;
   padding: 0.5rem 1rem;
-  background-color: #db2777; /* Pink-600 */
+  background-color: #db2777;
   color: white;
   font-weight: 500;
   font-size: 0.875rem;
@@ -59,10 +57,9 @@
 }
 
 .shopButton:hover {
-  background-color: #be185d; /* Pink-700 */
+  background-color: #be185d;
 }
 
-/* Hide header on mobile */
 @media (max-width: 640px) {
   .ordersHeader {
     display: none;

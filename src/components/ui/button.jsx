@@ -1,4 +1,3 @@
-// src/components/ui/Button.jsx
 import React from "react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "./button-variants";
