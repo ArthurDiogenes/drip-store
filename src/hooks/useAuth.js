@@ -1,18 +1,14 @@
-// src/hooks/useAuth.js
 import { useEffect, useState } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { getCurrentUser, signOut } from '../services/authService';
 
 /**
- * Custom hook for authentication functionality
- * 
  * @returns {Object} Authentication utilities and state
  */
 const useAuth = () => {
   const { user, profile, loading, setUser, setProfile } = useUser();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -32,7 +28,6 @@ const useAuth = () => {
     checkAuth();
   }, [user, loading, setUser]);
 
-  // Handle logout
   const logout = async () => {
     try {
       setIsLoading(true);
@@ -48,7 +43,6 @@ const useAuth = () => {
     }
   };
 
-  // Check if user is authenticated
   const isAuthenticated = !!user;
 
   return {
