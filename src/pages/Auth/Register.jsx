@@ -121,10 +121,10 @@ const Register = () => {
             <p className={styles.socialText}>Ou faça login com</p>
             <div className={styles.socialButtons}>
               <button className={styles.googleButton} disabled={isStoring}>
-                <img src="/src/assets/icons/gmail.png" alt="Gmail" />
+                <img src="/icons/gmail.png" alt="Gmail" />
               </button>
               <button className={styles.facebookButton} disabled={isStoring}>
-                <img src="/src/assets/icons/facebook.png" alt="Facebook" />
+                <img src="/icons/facebook.png" alt="Facebook" />
               </button>
             </div>
           </div>
