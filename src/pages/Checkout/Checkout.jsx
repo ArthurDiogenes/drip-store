@@ -51,7 +51,7 @@ const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 
 
   const toastStyles = {
     position: 'fixed',
-    top: '20px',
+    top: '80px',
     right: '20px',
     zIndex: 1000,
     maxWidth: '400px',
@@ -820,8 +820,6 @@ const Checkout = () => {
                     </button>
                   </div>
                 </div>
-
-                // Fixed payment methods section for Checkout.jsx
 
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Pagamento</h2>
