@@ -821,12 +821,14 @@ const Checkout = () => {
                   </div>
                 </div>
 
+                // Fixed payment methods section for Checkout.jsx
+
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Informações de Pagamento</h2>
 
-                  {paymentMethods.length > 0 && (
-                    <div className="mb-6">
-                      <div className="flex space-x-4 mb-4">
+                  <div className="mb-6">
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      {paymentMethods.length > 0 && (
                         <label className="flex items-center">
                           <input
                             type="radio"
@@ -839,144 +841,115 @@ const Checkout = () => {
                           />
                           Usar cartão salvo
                         </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name="paymentMethodType"
-                            value="new"
-                            checked={formData.paymentMethod === 'new'}
-                            onChange={(e) => handlePaymentTypeChange(e.target.value)}
-                            className="mr-2"
-                            disabled={submitting}
-                          />
-                          Usar novo cartão
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name="paymentMethodType"
-                            value="boleto"
-                            checked={formData.paymentMethod === 'boleto'}
-                            onChange={(e) => handlePaymentTypeChange(e.target.value)}
-                            className="mr-2"
-                            disabled={submitting}
-                          />
-                          Boleto Bancário
-                        </label>
-                      </div>
-
-                      {formData.paymentMethod === 'saved' && (
-                        <div className="space-y-3">
-                          <h3 className="text-sm font-medium text-gray-700 mb-3">
-                            Selecione um cartão salvo:
-                          </h3>
-                          {paymentMethods.map((method) => (
-                            <PaymentMethodCard
-                              key={method.id}
-                              method={method}
-                              isSelected={selectedPaymentMethod?.id === method.id}
-                              onSelect={handlePaymentMethodSelection}
-                              disabled={submitting}
-                            />
-                          ))}
-                        </div>
                       )}
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="paymentMethodType"
+                          value="new"
+                          checked={formData.paymentMethod === 'new'}
+                          onChange={(e) => handlePaymentTypeChange(e.target.value)}
+                          className="mr-2"
+                          disabled={submitting}
+                        />
+                        Usar novo cartão
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="paymentMethodType"
+                          value="boleto"
+                          checked={formData.paymentMethod === 'boleto'}
+                          onChange={(e) => handlePaymentTypeChange(e.target.value)}
+                          className="mr-2"
+                          disabled={submitting}
+                        />
+                        Boleto Bancário
+                      </label>
                     </div>
-                  )}
 
-                  {formData.paymentMethod === 'new' && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-gray-700">Informações do novo cartão:</h3>
-                        {paymentMethods.length > 0 && (
+                    {formData.paymentMethod === 'saved' && paymentMethods.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-gray-700 mb-3">
+                          Selecione um cartão salvo:
+                        </h3>
+                        {paymentMethods.map((method) => (
+                          <PaymentMethodCard
+                            key={method.id}
+                            method={method}
+                            isSelected={selectedPaymentMethod?.id === method.id}
+                            onSelect={handlePaymentMethodSelection}
+                            disabled={submitting}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {formData.paymentMethod === 'new' && (
+                      <div className="space-y-4">
+                        <div className="p-6 bg-gray-50 border border-gray-200 rounded-md text-center">
+                          <div className="mb-4">
+                            <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                            <h3 className="text-lg font-medium text-gray-700 mb-2">Adicionar Novo Cartão</h3>
+                            <p className="text-sm text-gray-600">
+                              Para usar um novo cartão, você precisa adicioná-lo primeiro aos seus métodos de pagamento.
+                            </p>
+                          </div>
                           <button
                             type="button"
                             onClick={() => navigate('/adicionar-cartao')}
-                            className="text-sm text-pink-600 hover:text-pink-700 underline flex items-center"
+                            className="bg-pink-600 text-white px-6 py-3 rounded-md hover:bg-pink-700 transition-colors flex items-center mx-auto"
+                            disabled={submitting}
                           >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Salvar este cartão
+                            <Plus className="w-4 h-4 mr-2" />
+                            Adicionar Novo Cartão
                           </button>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium mb-1">
-                            Nome no Cartão <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="cardName"
-                            value={formData.cardName}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                            required={formData.paymentMethod === 'new'}
-                            disabled={submitting}
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium mb-1">
-                            Número do Cartão <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="cardNumber"
-                            value={formData.cardNumber}
-                            onChange={handleInputChange}
-                            placeholder="0000 0000 0000 0000"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                            required={formData.paymentMethod === 'new'}
-                            disabled={submitting}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">
-                            Data de Validade <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="expiryDate"
-                            value={formData.expiryDate}
-                            onChange={handleInputChange}
-                            placeholder="MM/AA"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                            required={formData.paymentMethod === 'new'}
-                            disabled={submitting}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">
-                            CVV <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="cvv"
-                            value={formData.cvv}
-                            onChange={handleInputChange}
-                            placeholder="123"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                            required={formData.paymentMethod === 'new'}
-                            disabled={submitting}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {paymentMethods.length === 0 && (
-                    <div className="mt-4 mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <div className="flex items-start">
-                        <Info className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm text-yellow-800">
-                            Você não tem cartões salvos. Após este pedido, você pode salvar seus cartões em
-                            <a href="/metodos-pagamento" className="underline ml-1">Métodos de Pagamento</a> para checkout mais rápido.
+                          <p className="text-xs text-gray-500 mt-3">
+                            Após adicionar o cartão, você pode retornar ao checkout para finalizar sua compra.
                           </p>
                         </div>
                       </div>
+                    )}
+
+                    {formData.paymentMethod === 'boleto' && (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                          <h4 className="text-sm font-medium text-blue-800 mb-2">Pagamento via Boleto Bancário</h4>
+                          <ul className="text-xs text-blue-700 space-y-1">
+                            <li>• O boleto será gerado após a confirmação do pedido</li>
+                            <li>• Prazo de vencimento: 3 dias úteis</li>
+                            <li>• Pagamento à vista (sem parcelamento)</li>
+                            <li>• Processamento em até 2 dias úteis após o pagamento</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-start">
+                      <Info className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+                      <div>
+                        {paymentMethods.length === 0 ? (
+                          <p className="text-sm text-blue-800">
+                            Você não tem cartões salvos. Após este pedido, você pode salvar seus cartões em{' '}
+                            <button
+                              type="button"
+                              onClick={() => navigate('/metodos-pagamento')}
+                              className="underline hover:no-underline"
+                            >
+                              Métodos de Pagamento
+                            </button>{' '}
+                            para checkout mais rápido.
+                          </p>
+                        ) : (
+                          <p className="text-sm text-blue-800">
+                            Seus cartões salvos estão disponíveis para seleção. Você também pode usar um novo cartão ou pagar via boleto.
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 <div className="md:hidden">
