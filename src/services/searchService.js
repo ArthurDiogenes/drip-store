@@ -19,14 +19,12 @@ export const searchProducts = async (searchTerm, filters = {}) => {
       )
       .eq("ativo", true);
 
-    // Aplicar busca
     if (searchTerm) {
       query = query.or(
         `nome.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%`
       );
     }
 
-    // Aplicar outros filtros se necessário
     if (filters.categoria) {
       query = query.eq("categoria_id", filters.categoria);
     }

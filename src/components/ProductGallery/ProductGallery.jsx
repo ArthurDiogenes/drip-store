@@ -1,4 +1,3 @@
-// components/ProductGallery/ProductGallery.jsx
 import React, { useState } from 'react';
 import { Navigation, Thumbs } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -10,14 +9,12 @@ import styles from './ProductGallery.module.css';
 const ProductGallery = ({ images }) => {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   
-  // If no images are provided, use a placeholder
   const galleryImages = images?.length 
     ? images 
     : [{ id: 'placeholder', src: '/placeholder.jpg', alt: 'Product image placeholder' }];
 
   return (
     <div className={styles.productGallery}>
-      {/* Main product image */}
       <div className={styles.mainImageContainer}>
         <Swiper
           modules={[Navigation, Thumbs]}
@@ -42,7 +39,6 @@ const ProductGallery = ({ images }) => {
             </SwiperSlide>
           ))}
           
-          {/* Custom navigation arrows */}
           <div className={styles.swiperButtonPrev}>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
@@ -56,7 +52,6 @@ const ProductGallery = ({ images }) => {
         </Swiper>
       </div>
       
-      {/* Thumbnail images */}
       <div className={styles.thumbnailContainer}>
         <Swiper
           onSwiper={setThumbsSwiper}

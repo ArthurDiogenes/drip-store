@@ -1,8 +1,6 @@
-// components/Breadcrumb/Breadcrumb.jsx
 import React from 'react';
 
 const Breadcrumb = ({ items }) => {
-  // If no items provided, return null
   if (!items || items.length === 0) {
     return null;
   }

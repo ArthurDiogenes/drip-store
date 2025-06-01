@@ -1,8 +1,6 @@
-// src/services/cartService.js - FIXED WITH SIMPLE QUERY
 import { supabase } from './supabase';
 import { v4 as uuidv4 } from 'uuid';
 
-// Get or create a cart session ID
 const getCartSessionId = () => {
   let sessionId = localStorage.getItem('cartSessionId');
   if (!sessionId) {
@@ -12,19 +10,17 @@ const getCartSessionId = () => {
   return sessionId;
 };
 
-// FIXED: Get or create cart - handle multiple carts properly
 export const getCart = async (userId = null) => {
   try {
     console.log('Getting cart for user:', userId);
     
-    // If user is logged in, get their cart
     if (userId) {
       console.log('User is logged in, checking for existing cart...');
       const { data: userCarts, error: userCartError } = await supabase
         .from('carrinho')
         .select('id')
         .eq('usuario_id', userId)
-        .order('data_criacao', { ascending: false }); // Get the most recent cart
+        .order('data_criacao', { ascending: false });
       
       if (userCartError) {
         console.error('Error checking user cart:', userCartError);
@@ -33,10 +29,9 @@ export const getCart = async (userId = null) => {
       
       if (userCarts && userCarts.length > 0) {
         console.log('Found existing user cart(s):', userCarts);
-        return userCarts[0].id; // Return the most recent cart
+        return userCarts[0].id;
       }
       
-      // Create a new cart for the user
       console.log('Creating new cart for user...');
       const { data: newUserCart, error: createError } = await supabase
         .from('carrinho')
@@ -53,7 +48,6 @@ export const getCart = async (userId = null) => {
       return newUserCart.id;
     } 
     
-    // For guests, use session ID
     const sessionId = getCartSessionId();
     console.log('Guest user, using session ID:', sessionId);
     
@@ -61,7 +55,7 @@ export const getCart = async (userId = null) => {
       .from('carrinho')
       .select('id')
       .eq('sessao_id', sessionId)
-      .order('data_criacao', { ascending: false }); // Get the most recent cart
+      .order('data_criacao', { ascending: false }); 
       
     if (sessionCartError) {
       console.error('Error checking session cart:', sessionCartError);
@@ -70,10 +64,9 @@ export const getCart = async (userId = null) => {
     
     if (sessionCarts && sessionCarts.length > 0) {
       console.log('Found existing session cart(s):', sessionCarts);
-      return sessionCarts[0].id; // Return the most recent cart
+      return sessionCarts[0].id; 
     }
     
-    // Create a new cart for the session
     console.log('Creating new cart for session...');
     const { data: newSessionCart, error: createError } = await supabase
       .from('carrinho')
@@ -95,24 +88,20 @@ export const getCart = async (userId = null) => {
   }
 };
 
-// DEBUG: Function to check all cart data
 export const debugCartData = async () => {
   console.log('=== DEBUG: All Cart Data ===');
   
   try {
-    // Get all carts
     const { data: allCarts } = await supabase
       .from('carrinho')
       .select('*');
     console.log('All carts:', allCarts);
     
-    // Get all cart items
     const { data: allCartItems } = await supabase
       .from('itens_carrinho')
       .select('*');
     console.log('All cart items:', allCartItems);
     
-    // Get all products
     const { data: allProducts } = await supabase
       .from('produtos')
       .select('id, nome');
@@ -125,12 +114,10 @@ export const debugCartData = async () => {
   console.log('=== END DEBUG ===');
 };
 
-// FIX: Get cart items with separate queries to avoid join issues
 export const getCartItems = async (cartId) => {
   console.log('Getting cart items for cart ID:', cartId);
   
   try {
-    // First, get the cart items
     const { data: cartItems, error: cartError } = await supabase
       .from('itens_carrinho')
       .select('id, quantidade, preco_unitario, produto_id')
@@ -147,7 +134,6 @@ export const getCartItems = async (cartId) => {
       return [];
     }
     
-    // Then, get the product details for each item
     const productIds = cartItems.map(item => item.produto_id);
     
     const { data: products, error: productsError } = await supabase
@@ -169,7 +155,6 @@ export const getCartItems = async (cartId) => {
     
     console.log('Products found:', products);
     
-    // Combine cart items with product details
     const transformedItems = cartItems.map(item => {
       const product = products.find(p => p.id === item.produto_id);
       
@@ -178,7 +163,6 @@ export const getCartItems = async (cartId) => {
         return null;
       }
       
-      // Find the principal image or use the first one
       const images = product.imagens_produto || [];
       const principalImage = images.find(img => img.principal) || images[0];
       
@@ -197,7 +181,7 @@ export const getCartItems = async (cartId) => {
         cor: '',
         tamanho: ''
       };
-    }).filter(item => item !== null); // Remove any null items
+    }).filter(item => item !== null); 
     
     console.log('Final transformed cart items:', transformedItems);
     return transformedItems;
@@ -208,9 +192,7 @@ export const getCartItems = async (cartId) => {
   }
 };
 
-// Add item to cart
 export const addToCart = async (cartId, productId, variationId, quantity = 1) => {
-  // Check if the item is already in the cart
   const { data: existingItem } = await supabase
     .from('itens_carrinho')
     .select('id, quantidade')
@@ -218,7 +200,6 @@ export const addToCart = async (cartId, productId, variationId, quantity = 1) =>
     .eq('variacao_id', variationId)
     .maybeSingle();
     
-  // Get current product price
   const { data: product } = await supabase
     .from('produtos')
     .select('preco_promocional, preco_original')
@@ -230,7 +211,6 @@ export const addToCart = async (cartId, productId, variationId, quantity = 1) =>
   const priceToUse = product.preco_promocional || product.preco_original;
   
   if (existingItem) {
-    // Update quantity of existing item
     const { data, error } = await supabase
       .from('itens_carrinho')
       .update({ quantidade: existingItem.quantidade + quantity })
@@ -241,7 +221,6 @@ export const addToCart = async (cartId, productId, variationId, quantity = 1) =>
     return data;
   }
   
-  // Add new item to cart
   const { data, error } = await supabase
     .from('itens_carrinho')
     .insert({
@@ -257,7 +236,6 @@ export const addToCart = async (cartId, productId, variationId, quantity = 1) =>
   return data;
 };
 
-// Update cart item quantity
 export const updateCartItemQuantity = async (itemId, quantity) => {
   const { data, error } = await supabase
     .from('itens_carrinho')
@@ -269,7 +247,6 @@ export const updateCartItemQuantity = async (itemId, quantity) => {
   return data;
 };
 
-// Remove item from cart
 export const removeCartItem = async (itemId) => {
   const { error } = await supabase
     .from('itens_carrinho')
@@ -280,7 +257,6 @@ export const removeCartItem = async (itemId) => {
   return true;
 };
 
-// Get cart summary (subtotal, total items)
 export const getCartSummary = async (cartId) => {
   const { data, error } = await supabase
     .from('itens_carrinho')
@@ -307,7 +283,6 @@ export const getCartSummary = async (cartId) => {
   };
 };
 
-// Clear cart
 export const clearCart = async (cartId) => {
   const { error } = await supabase
     .from('itens_carrinho')
@@ -318,12 +293,10 @@ export const clearCart = async (cartId) => {
   return true;
 };
 
-// Add item to cart without variations (simple version)
 export const addToCartSimple = async (cartId, productId, quantity = 1) => {
   try {
     console.log('Adding to cart:', { cartId, productId, quantity });
     
-    // Get current product price
     const { data: product, error: productError } = await supabase
       .from('produtos')
       .select('preco_promocional, preco_original, nome')
@@ -340,7 +313,6 @@ export const addToCartSimple = async (cartId, productId, quantity = 1) => {
     const priceToUse = product.preco_promocional || product.preco_original;
     console.log('Product price to use:', priceToUse);
     
-    // Check if item already exists in cart (without variacao_id)
     const { data: existingItem, error: existingError } = await supabase
       .from('itens_carrinho')
       .select('id, quantidade')
@@ -356,7 +328,6 @@ export const addToCartSimple = async (cartId, productId, quantity = 1) => {
     
     if (existingItem) {
       console.log('Updating existing item:', existingItem);
-      // Update quantity of existing item
       const { data, error } = await supabase
         .from('itens_carrinho')
         .update({ quantidade: existingItem.quantidade + quantity })
@@ -372,7 +343,6 @@ export const addToCartSimple = async (cartId, productId, quantity = 1) => {
     }
     
     console.log('Adding new item to cart');
-    // Add new item to cart (with null variation)
     const { data, error } = await supabase
       .from('itens_carrinho')
       .insert({

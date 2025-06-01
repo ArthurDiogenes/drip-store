@@ -1,4 +1,3 @@
-// src/components/FeaturedProducts/FeaturedProducts.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../ProductCard/ProductCard';
@@ -92,7 +91,6 @@ const FeaturedProducts = ({ limit = 8, showAllLink = true }) => {
         )}
       </div>
       
-      {/* Estamos usando o componente ProductCard existente, que já tem a lógica de renderização */}
       <ProductCard produtos={products} />
     </section>
   );

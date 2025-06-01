@@ -1,4 +1,3 @@
-// src/components/ui/Checkbox.jsx
 import * as React from "react";
 import { CheckSquare, Square } from "lucide-react";
 import { cn } from "@/lib/utils";

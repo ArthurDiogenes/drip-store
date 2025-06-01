@@ -2,11 +2,7 @@ import React from 'react';
 import OrderItem from '../OrderItem/OrderItem.jsx';
 import styles from './OrdersList.module.css';
 
-/**
- * OrdersList Component - Displays a list of orders
- */
 const OrdersList = ({ orders = [] }) => {
-  // If no orders are provided or the array is empty
   if (!orders || orders.length === 0) {
     return (
       <div className={styles.emptyState}>
@@ -43,7 +39,7 @@ const OrdersList = ({ orders = [] }) => {
             productName={order.productName}
             productImage={order.productImage}
             status={order.status}
-            statusText={order.statusText} // Pass the real status text
+            statusText={order.statusText}
           />
         ))}
       </div>

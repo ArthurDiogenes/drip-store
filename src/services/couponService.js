@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 
-// Validate and apply coupon
 export const validateCoupon = async (couponCode, cartTotal) => {
   try {
     console.log('Validating coupon:', couponCode, 'for cart total:', cartTotal);
@@ -19,7 +18,6 @@ export const validateCoupon = async (couponCode, cartTotal) => {
       throw error;
     }
     
-    // Check if coupon is valid
     const now = new Date();
     const startDate = new Date(coupon.data_inicio);
     const endDate = new Date(coupon.data_expiracao);
@@ -32,17 +30,14 @@ export const validateCoupon = async (couponCode, cartTotal) => {
       throw new Error('Este cupom expirou.');
     }
     
-    // Check minimum value
     if (coupon.valor_minimo && cartTotal < coupon.valor_minimo) {
       throw new Error(`Pedido mínimo de R$ ${coupon.valor_minimo.toFixed(2).replace('.', ',')} para usar este cupom.`);
     }
     
-    // Check usage limit
     if (coupon.usos_maximos && coupon.usos_atuais >= coupon.usos_maximos) {
       throw new Error('Este cupom atingiu o limite de uso.');
     }
     
-    // Calculate discount
     let discountValue = 0;
     
     switch (coupon.tipo) {
@@ -53,13 +48,12 @@ export const validateCoupon = async (couponCode, cartTotal) => {
         discountValue = coupon.valor;
         break;
       case 'Frete Grátis':
-        discountValue = 0; // Handled separately in shipping calculation
+        discountValue = 0;
         break;
       default:
         throw new Error('Tipo de cupom inválido.');
     }
     
-    // Ensure discount doesn't exceed cart total
     discountValue = Math.min(discountValue, cartTotal);
     
     return {
@@ -84,7 +78,6 @@ export const validateCoupon = async (couponCode, cartTotal) => {
   }
 };
 
-// Apply coupon (increment usage)
 export const applyCoupon = async (couponId) => {
   try {
     const { error } = await supabase.rpc('incrementar_uso_cupom', {
@@ -96,12 +89,10 @@ export const applyCoupon = async (couponId) => {
     
   } catch (error) {
     console.error('Error applying coupon:', error);
-    // Don't throw error here as the order might still be valid
     return false;
   }
 };
 
-// Get available coupons (for testing/admin)
 export const getAvailableCoupons = async () => {
   try {
     const { data, error } = await supabase

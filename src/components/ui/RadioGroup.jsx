@@ -1,4 +1,3 @@
-// src/components/ui/RadioGroup.jsx
 import * as React from "react";
 import { Circle } from "lucide-react";
 import { cn } from "@/lib/utils";

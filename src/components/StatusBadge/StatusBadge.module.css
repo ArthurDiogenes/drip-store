@@ -1,5 +1,3 @@
-/* src/components/StatusBadge/StatusBadge.module.css */
-
 .badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -10,26 +8,22 @@
   white-space: nowrap;
 }
 
-/* Transit status (Yellow/Orange) */
 .transit {
-  background-color: #fffbeb; /* Amber-50 */
-  color: #d97706; /* Amber-600 */
+  background-color: #fffbeb;
+  color: #d97706;
 }
 
-/* Completed status (Green) */
 .completed {
-  background-color: #f0fdf4; /* Green-50 */
-  color: #16a34a; /* Green-600 */
+  background-color: #f0fdf4; 
+  color: #16a34a; 
 }
 
-/* Canceled status (Red) */
 .canceled {
-  background-color: #fef2f2; /* Red-50 */
-  color: #dc2626; /* Red-600 */
+  background-color: #fef2f2; 
+  color: #dc2626; 
 }
 
-/* Default status (Gray) */
 .default {
-  background-color: #f3f4f6; /* Gray-100 */
-  color: #6b7280; /* Gray-500 */
+  background-color: #f3f4f6; 
+  color: #6b7280; 
 }

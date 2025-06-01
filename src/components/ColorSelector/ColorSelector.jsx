@@ -1,8 +1,6 @@
-// components/ColorSelector/ColorSelector.jsx
 import React from 'react';
 
 const ColorSelector = ({ colors, selectedColor, onColorSelect }) => {
-  // If no colors provided, return null
   if (!colors || colors.length === 0) {
     return null;
   }
@@ -34,13 +32,5 @@ const ColorSelector = ({ colors, selectedColor, onColorSelect }) => {
     </div>
   );
 };
-
-// Example usage:
-// const [selectedColor, setSelectedColor] = useState('#40E0D0');
-// <ColorSelector 
-//   colors={['#40E0D0', '#FF6347', '#556B2F', '#4B0082']} 
-//   selectedColor={selectedColor} 
-//   onColorSelect={setSelectedColor} 
-// />
 
 export default ColorSelector;

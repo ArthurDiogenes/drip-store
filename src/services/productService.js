@@ -1,43 +1,34 @@
-// src/services/productService.js - Versão completa com função para HeroBanner
 import { supabase } from './supabase';
 
-// Helper function to determine appropriate sizes based on category
 const getSizesForCategory = (categoryName) => {
   const category = categoryName?.toLowerCase();
   
   if (category?.includes('tênis') || category?.includes('tenis') || category?.includes('sapato')) {
-    // Shoe sizes
     return ['39', '40', '41', '42', '43', '44', '45'];
   } else if (category?.includes('camiseta') || category?.includes('camisa') || 
              category?.includes('calça') || category?.includes('calca') || 
              category?.includes('bermuda') || category?.includes('short') ||
              category?.includes('blusa') || category?.includes('casaco')) {
-    // Clothing sizes
     return ['P', 'M', 'G', 'GG'];
   } else if (category?.includes('boné') || category?.includes('bone') || 
              category?.includes('chapéu') || category?.includes('chapeu') ||
              category?.includes('headphone') || category?.includes('fone')) {
-    // Hat and accessory sizes
     return ['P', 'M', 'G', 'GG'];
   }
   
-  // Default sizes for other products
   return ['P', 'M', 'G', 'GG'];
 };
 
-// Helper function to determine appropriate colors
 const getColorsForProduct = () => {
-  // Default color palette
   return [
-    '#000000', // Preto
-    '#A0A0A0',  // Cinza
-    '#FFFFFF', // Branco
-    '#FF0000', // Vermelho
-    '#0000FF' // Azul
+    '#000000',
+    '#A0A0A0', 
+    '#FFFFFF', 
+    '#FF0000', 
+    '#0000FF' 
   ];
 };
 
-// NOVA FUNÇÃO: Get products for hero banner
 export const getHeroBannerProducts = async (limit = 8) => {
   try {
     console.log('Buscando produtos para hero banner...');
@@ -67,12 +58,10 @@ export const getHeroBannerProducts = async (limit = 8) => {
     
     console.log('Produtos encontrados para banner:', data.length);
     
-    // Transform products into banner slides
-    return data.map((product, index) => {
+    return data.map((product) => {
       const imagens = product.imagens_produto || [];
       const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
       
-      // Criar títulos mais atraentes para o banner
       const brandName = product.marca_id?.nome || '';
       const categoryName = product.categoria_id?.nome || '';
       
@@ -81,7 +70,6 @@ export const getHeroBannerProducts = async (limit = 8) => {
         bannerTitle = `${brandName} ${categoryName}`;
       }
       
-      // Descrições mais atrativas baseadas na categoria
       let bannerDescription = '';
       if (categoryName?.toLowerCase().includes('tênis')) {
         bannerDescription = 'Conforto e estilo para seus pés. Tecnologia de ponta e design moderno em cada passo.';
@@ -93,7 +81,6 @@ export const getHeroBannerProducts = async (limit = 8) => {
         bannerDescription = `Produtos de alta qualidade em ${categoryName}. Descontos especiais por tempo limitado!`;
       }
       
-      // Textos de botão mais específicos
       let buttonText = 'Ver Produto';
       if (product.desconto_porcentagem > 0) {
         if (product.desconto_porcentagem >= 50) {
@@ -121,7 +108,6 @@ export const getHeroBannerProducts = async (limit = 8) => {
   }
 };
 
-// Get featured products for home page
 export const getFeaturedProducts = async (limit = 8) => {
   try {
     const { data, error } = await supabase
@@ -145,9 +131,7 @@ export const getFeaturedProducts = async (limit = 8) => {
 
     if (error) throw error;
     
-    // Transform data for ProductCard component
     return data.map(product => {
-      // Find principal image or first available
       const imagens = product.imagens_produto || [];
       const imagemPrincipal = imagens.find(img => img.principal) || imagens[0];
       
@@ -169,7 +153,6 @@ export const getFeaturedProducts = async (limit = 8) => {
   }
 };
 
-// Get product categories
 export const getCategories = async () => {
   try {
     const { data, error } = await supabase
@@ -186,7 +169,6 @@ export const getCategories = async () => {
   }
 };
 
-// Get collections for home page
 export const getCollections = async () => {
   try {
     const { data, error } = await supabase
@@ -204,7 +186,6 @@ export const getCollections = async () => {
   }
 };
 
-// Get products by category
 export const getProductsByCategory = async (categorySlug) => {
   try {
     const { data, error } = await supabase
@@ -242,7 +223,6 @@ export const getProductsByCategory = async (categorySlug) => {
   }
 };
 
-// Get product detail by slug - WITH SIZES AND COLORS
 export const getProductBySlug = async (slug) => {
   try {
     const { data, error } = await supabase
@@ -281,12 +261,10 @@ export const getProductBySlug = async (slug) => {
       throw error;
     }
     
-    // Extract available colors and sizes from variations
     let availableColors = [];
     let availableSizes = [];
     
     if (data.variacoes_produto && data.variacoes_produto.length > 0) {
-      // Get actual variations from database
       data.variacoes_produto.forEach(variation => {
         if (variation.cor_id && !availableColors.some(c => c.id === variation.cor_id.id)) {
           availableColors.push({
@@ -305,7 +283,6 @@ export const getProductBySlug = async (slug) => {
       });
     }
     
-    // If no variations exist, provide default options based on category
     if (availableSizes.length === 0) {
       const defaultSizes = getSizesForCategory(data.categoria_id?.nome);
       availableSizes = defaultSizes.map((size, index) => ({
@@ -323,7 +300,6 @@ export const getProductBySlug = async (slug) => {
       }));
     }
     
-    // Sort images with principal first
     const sortedImages = [...(data.imagens_produto || [])];
     sortedImages.sort((a, b) => {
       if (a.principal) return -1;
@@ -331,7 +307,6 @@ export const getProductBySlug = async (slug) => {
       return (a.ordem || 0) - (b.ordem || 0);
     });
     
-    // If no images, provide a default one
     const finalImages = sortedImages.length > 0 
       ? sortedImages.map(img => ({
           id: img.id,
@@ -358,7 +333,6 @@ export const getProductBySlug = async (slug) => {
       colors: availableColors.map(c => c.hexCode),
       sizes: availableSizes.map(s => s.value),
       images: finalImages,
-      // Include variations for potential cart integration
       variations: data.variacoes_produto || []
     };
   } catch (error) {
@@ -367,10 +341,8 @@ export const getProductBySlug = async (slug) => {
   }
 };
 
-// Get related products
 export const getRelatedProducts = async (productId, limit = 4) => {
   try {
-    // Check if there are specific related products
     const { data: relatedData, error: relatedError } = await supabase
       .from('produtos_relacionados')
       .select(`
@@ -391,7 +363,6 @@ export const getRelatedProducts = async (productId, limit = 4) => {
 
     if (relatedError) throw relatedError;
     
-    // If we have specific related products, use those
     if (relatedData && relatedData.length > 0) {
       return relatedData.map(item => {
         const product = item.produto_relacionado_id;
@@ -408,7 +379,6 @@ export const getRelatedProducts = async (productId, limit = 4) => {
       });
     }
     
-    // Otherwise, get products from the same category
     const { data: product } = await supabase
       .from('produtos')
       .select('categoria_id')
@@ -430,7 +400,7 @@ export const getRelatedProducts = async (productId, limit = 4) => {
         imagens_produto (url)
       `)
       .eq('categoria_id', product.categoria_id)
-      .neq('id', productId)  // Exclude current product
+      .neq('id', productId) 
       .eq('ativo', true)
       .order('quantidade_vendas', { ascending: false })
       .limit(limit);

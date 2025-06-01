@@ -1,8 +1,6 @@
-// components/SizeSelector/SizeSelector.jsx
 import React from 'react';
 
 const SizeSelector = ({ sizes, selectedSize, onSizeSelect }) => {
-  // If no sizes provided, return null
   if (!sizes || sizes.length === 0) {
     return null;
   }
@@ -33,13 +31,5 @@ const SizeSelector = ({ sizes, selectedSize, onSizeSelect }) => {
     </div>
   );
 };
-
-// Example usage:
-// const [selectedSize, setSelectedSize] = useState('41');
-// <SizeSelector 
-//   sizes={['39', '40', '41', '42', '43']} 
-//   selectedSize={selectedSize} 
-//   onSizeSelect={setSelectedSize} 
-// />
 
 export default SizeSelector;

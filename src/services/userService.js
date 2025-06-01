@@ -1,7 +1,5 @@
-// src/services/userService.js
 import { supabase } from './supabase';
 
-// Get user payment methods
 export const getUserPaymentMethods = async (userId) => {
   const { data, error } = await supabase
     .from('metodos_pagamento_usuario')
@@ -13,9 +11,7 @@ export const getUserPaymentMethods = async (userId) => {
   return data || [];
 };
 
-// Add a new payment method
 export const addPaymentMethod = async (userId, paymentData) => {
-  // Check if this is the first card to make it the default
   const { data: existingCards } = await supabase
     .from('metodos_pagamento_usuario')
     .select('id')
@@ -40,9 +36,7 @@ export const addPaymentMethod = async (userId, paymentData) => {
   return data;
 };
 
-// Set a payment method as default
 export const setDefaultPaymentMethod = async (userId, methodId) => {
-  // First, set all methods to non-default
   const { error: updateError } = await supabase
     .from('metodos_pagamento_usuario')
     .update({ padrao: false })
@@ -50,7 +44,6 @@ export const setDefaultPaymentMethod = async (userId, methodId) => {
   
   if (updateError) throw updateError;
   
-  // Then set the selected method as default
   const { data, error } = await supabase
     .from('metodos_pagamento_usuario')
     .update({ padrao: true })
@@ -62,7 +55,6 @@ export const setDefaultPaymentMethod = async (userId, methodId) => {
   return data;
 };
 
-// Remove a payment method
 export const removePaymentMethod = async (userId, methodId) => {
   const { error } = await supabase
     .from('metodos_pagamento_usuario')
@@ -74,7 +66,6 @@ export const removePaymentMethod = async (userId, methodId) => {
   return true;
 };
 
-// Get user profile
 export const getUserProfile = async (userId) => {
   try {
     const { data, error } = await supabase
@@ -91,7 +82,6 @@ export const getUserProfile = async (userId) => {
   }
 };
 
-// Update user profile
 export const updateUserProfile = async (userId, profileData) => {
   try {
     const { data, error } = await supabase

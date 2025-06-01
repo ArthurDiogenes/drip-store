@@ -1,4 +1,3 @@
-// src/components/AccountSidebar/AccountSidebar.jsx
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './AccountSidebar.module.css';
@@ -7,7 +6,6 @@ const AccountSidebar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Navigation items for sidebar
   const navItems = [
     { 
       path: '/meus-pedidos', 

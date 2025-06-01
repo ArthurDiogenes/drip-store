@@ -1,9 +1,7 @@
-// src/components/CategoryNavigation/CategoryNavigation.jsx
 import React, { useState } from 'react';
 import './CategoryNavigation.css';
 
 const CategoryIcon = ({ name, normalIcon, hoverIcon, link = "#" }) => {
-  // Estado para controlar o hover
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -18,7 +16,6 @@ const CategoryIcon = ({ name, normalIcon, hoverIcon, link = "#" }) => {
           isHovered ? 'shadow-md' : ''
         } flex items-center justify-center mb-3 transition-all`}
       >
-        {/* Mostra o ícone normal ou o ícone hover com base no estado */}
         <img
           src={isHovered ? hoverIcon : normalIcon}
           alt={name}
@@ -37,46 +34,44 @@ const CategoryIcon = ({ name, normalIcon, hoverIcon, link = "#" }) => {
 };
 
 const CategoryNavigation = ({ categories = [] }) => {
-  // Categorias padrão caso não sejam fornecidas
   const defaultCategories = [
     {
       id: 1,
       name: "Camisetas",
       normalIcon: "/icons/icon-category-tshirt.svg",
-      hoverIcon: "/icons/icon-category-tshirt.mim.svg", // SVG já colorido em rosa
+      hoverIcon: "/icons/icon-category-tshirt.mim.svg",
       link: "/categorias/camisetas"
     },
     {
       id: 2,
       name: "Calças",
       normalIcon: "/icons/icon-category-pants.svg",
-      hoverIcon: "/icons/icon-category-pants.min.svg", // SVG já colorido em rosa
+      hoverIcon: "/icons/icon-category-pants.min.svg",
       link: "/categorias/calcas"
     },
     {
       id: 3,
       name: "Bonés",
       normalIcon: "/icons/icon-category-cap.svg",
-      hoverIcon: "/icons/icon-category-cap.min.svg", // SVG já colorido em rosa
+      hoverIcon: "/icons/icon-category-cap.min.svg",
       link: "/categorias/bones"
     },
     {
       id: 4,
       name: "Headphones",
       normalIcon: "/icons/icon-category-headphones.svg",
-      hoverIcon: "/icons/icon-category-headphones.min.svg", // SVG já colorido em rosa
+      hoverIcon: "/icons/icon-category-headphones.min.svg",
       link: "/categorias/headphones"
     },
     {
       id: 5,
       name: "Tênis",
       normalIcon: "/icons/icon-category-sneakers.svg",
-      hoverIcon: "/icons/icon-category-sneakers.min.svg", // SVG já colorido em rosa
+      hoverIcon: "/icons/icon-category-sneakers.min.svg",
       link: "/categorias/tenis"
     }
   ];
 
-  // Usa as categorias fornecidas ou as padrão
   const categoriesToRender = categories.length > 0 ? categories : defaultCategories;
 
   return (

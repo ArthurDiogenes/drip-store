@@ -1,4 +1,3 @@
-// src/components/CartItem/CartItem.jsx
 import React from 'react';
 import styles from './CartItem.module.css';
 
@@ -26,7 +25,6 @@ const CartItem = ({
 
   return (
     <div className={`${styles.cartItem} ${disabled ? styles.loading : ''}`}>
-      {/* Product Column (PRODUTO) */}
       <div className={styles.productColumn}>
         <div className={styles.productImage}>
           <img 
@@ -62,7 +60,6 @@ const CartItem = ({
         </div>
       </div>
 
-      {/* Quantity Column (QUANTIDADE) */}
       <div className={styles.quantityColumn}>
         <div className={styles.quantityControls}>
           <button 
@@ -91,7 +88,6 @@ const CartItem = ({
         </div>
       </div>
 
-      {/* Unit Price Column (UNITÁRIO) */}
       <div className={styles.unitPriceColumn}>
         {product.precoOriginal > product.precoAtual && (
           <p className={styles.originalPrice}>R$ {product.precoOriginal.toFixed(2).replace('.', ',')}</p>
@@ -99,7 +95,6 @@ const CartItem = ({
         <p className={styles.currentPrice}>R$ {product.precoAtual.toFixed(2).replace('.', ',')}</p>
       </div>
 
-      {/* Total Column (TOTAL) */}
       <div className={styles.totalColumn}>
         <p className={styles.currentPrice}>R$ {(product.precoAtual * quantity).toFixed(2).replace('.', ',')}</p>
       </div>

@@ -1,4 +1,3 @@
-// src/components/StatusBadge/StatusBadge.jsx
 import React from 'react';
 import styles from './StatusBadge.module.css';
 
@@ -10,7 +9,6 @@ import styles from './StatusBadge.module.css';
  * @returns {JSX.Element} A styled status badge
  */
 const StatusBadge = ({ status, type }) => {
-  // Map status types to CSS class names
   const getStatusClass = () => {
     switch (type) {
       case 'transit':
@@ -31,7 +29,6 @@ const StatusBadge = ({ status, type }) => {
   );
 };
 
-// Helper function to create predefined status badges
 StatusBadge.Transit = () => (
   <StatusBadge status="Produto em trânsito" type="transit" />
 );
