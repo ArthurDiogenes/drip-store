@@ -17,7 +17,7 @@ export const createOrder = async (orderData) => {
       .insert({
         codigo: orderCode,
         usuario_id: orderData.userId,
-        status: 'Aguardando Pagamento',
+        status: 'Pagamento Confirmado',
         valor_produtos: orderData.subtotal,
         valor_frete: orderData.shipping || 0,
         valor_desconto: orderData.discount || 0,
@@ -107,11 +107,29 @@ export const getUserOrders = async (userId) => {
       const principalImage = images.find(img => img.principal) || images[0];
       
       let statusType = 'default';
-      if (order.status === 'Em Trânsito') statusType = 'transit';
-      else if (order.status === 'Entregue' || order.status === 'Finalizado') statusType = 'completed';
-      else if (order.status === 'Cancelado') statusType = 'canceled';
-      else if (order.status === 'Aguardando Pagamento' || order.status === 'Em Preparação' || order.status === 'Pagamento Confirmado') statusType = 'transit';
       
+      switch (order.status) {
+        case 'Aguardando Pagamento':
+          statusType = 'pending';
+          break;
+        case 'Pagamento Confirmado':
+        case 'Em Preparação':
+          statusType = 'processing';
+          break;
+        case 'Em Trânsito':
+          statusType = 'transit';
+          break;
+        case 'Entregue':
+        case 'Finalizado':
+          statusType = 'completed';
+          break;
+        case 'Cancelado':
+          statusType = 'canceled';
+          break;
+        default:
+          statusType = 'default';
+      }
+
       return {
         id: order.codigo,
         productName: product?.nome || 'Produto não encontrado',
