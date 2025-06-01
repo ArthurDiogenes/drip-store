@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './CategoryNavigation.css';
+import './CategoryNavigation.module.css';
 
 const CategoryIcon = ({ name, normalIcon, hoverIcon, link = "#" }) => {
   const [isHovered, setIsHovered] = useState(false);
