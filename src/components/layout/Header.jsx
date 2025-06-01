@@ -1,4 +1,4 @@
-// src/components/layout/Header.jsx - FIXED VERSION
+// src/components/layout/Header.jsx - VERSÃO COM BUSCA INTELIGENTE MELHORADA
 import { useState, useEffect, useRef } from "react";
 import {
   Search,
@@ -14,11 +14,11 @@ import miniCartIconPath from "/icons/mini-cart.svg";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
 import { useCart } from "../../contexts/CartContext";
+import { supabase } from "../../services/supabase";
 
 const Header = () => {
   // Hooks de Contexto e Navegação
   const { user, profile, loading, logoutUser } = useUser();
-  // FIX: Get all cart data from context including cartItems
   const { cartCount, cartItems, cartSubtotal, refreshCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,11 +32,187 @@ const Header = () => {
   const [searchValue, setSearchValue] = useState("");
   const [currentPage, setCurrentPage] = useState("");
 
+  // Estados para sugestões de busca
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
   // Referências DOM
   const cartButtonRef = useRef(null);
   const cartRef = useRef(null);
   const profileButtonRef = useRef(null);
   const profileModalRef = useRef(null);
+  const searchContainerRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
+
+  // --- FUNÇÕES AUXILIARES ---
+
+  // Função melhorada para normalizar texto (remove acentos e trata plural/singular)
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
+
+  // Função para criar variações de uma palavra (singular/plural)
+  const createWordVariations = (word) => {
+    const variations = [word];
+    const normalizedWord = normalizeText(word);
+    
+    // Remove 's' do final para singular
+    if (normalizedWord.endsWith('s') && normalizedWord.length > 3) {
+      variations.push(normalizedWord.slice(0, -1));
+    }
+    
+    // Remove 'es' do final para singular
+    if (normalizedWord.endsWith('es') && normalizedWord.length > 4) {
+      variations.push(normalizedWord.slice(0, -2));
+    }
+    
+    // Adiciona 's' para plural
+    if (!normalizedWord.endsWith('s')) {
+      variations.push(normalizedWord + 's');
+      
+      // Adiciona 'es' para palavras que terminam em consoante
+      if (!/[aeiou]$/.test(normalizedWord)) {
+        variations.push(normalizedWord + 'es');
+      }
+    }
+    
+    // Tratamento especial para palavras com ão -> ões
+    if (normalizedWord.endsWith('ao')) {
+      variations.push(normalizedWord.slice(0, -2) + 'oes');
+    }
+    if (normalizedWord.endsWith('oes')) {
+      variations.push(normalizedWord.slice(0, -3) + 'ao');
+    }
+    
+    // Tratamento especial para palavras comuns
+    const specialCases = {
+      'tenis': ['tenis', 'tennis'],
+      'tennis': ['tenis', 'tennis'],
+      'bone': ['bone', 'bones', 'boné', 'bonés'],
+      'bones': ['bone', 'bones', 'boné', 'bonés'],
+      'calca': ['calca', 'calcas', 'calça', 'calças'],
+      'calcas': ['calca', 'calcas', 'calça', 'calças'],
+      'camisa': ['camisa', 'camisas', 'camiseta', 'camisetas'],
+      'camiseta': ['camisa', 'camisas', 'camiseta', 'camisetas'],
+      'headphone': ['headphone', 'headphones', 'fone', 'fones'],
+      'headphones': ['headphone', 'headphones', 'fone', 'fones'],
+    };
+    
+    if (specialCases[normalizedWord]) {
+      variations.push(...specialCases[normalizedWord]);
+    }
+    
+    return [...new Set(variations)]; // Remove duplicatas
+  };
+
+  // Função melhorada para buscar sugestões
+  const fetchSuggestions = async (query) => {
+    if (!query || query.length < 2) {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    try {
+      setLoadingSuggestions(true);
+      
+      // Normaliza a query
+      const normalizedQuery = normalizeText(query);
+      
+      // Busca produtos e categorias no Supabase
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        supabase
+          .from('produtos')
+          .select(`
+            id, 
+            nome, 
+            slug, 
+            preco_promocional, 
+            preco_original,
+            categoria_id (nome)
+          `)
+          .eq('ativo', true)
+          .limit(50),
+        supabase
+          .from('categorias')
+          .select('id, nome, slug')
+          .eq('ativo', true)
+      ]);
+
+      if (productsResponse.error) throw productsResponse.error;
+      if (categoriesResponse.error) throw categoriesResponse.error;
+
+      const products = productsResponse.data || [];
+      const categories = categoriesResponse.data || [];
+
+      // Cria palavras-chave da query com suas variações
+      const queryWords = normalizedQuery.split(' ')
+        .filter(word => word.length > 1)
+        .flatMap(word => createWordVariations(word));
+
+      // Filtra produtos que contenham qualquer variação das palavras
+      const filteredProducts = products.filter(product => {
+        const normalizedProductName = normalizeText(product.nome);
+        const normalizedCategoryName = product.categoria_id ? normalizeText(product.categoria_id.nome) : '';
+        
+        return queryWords.some(word => 
+          normalizedProductName.includes(word) ||
+          normalizedCategoryName.includes(word)
+        );
+      });
+
+      // Busca também nas categorias
+      const matchingCategories = categories.filter(category => {
+        const normalizedCategoryName = normalizeText(category.nome);
+        return queryWords.some(word => normalizedCategoryName.includes(word));
+      });
+
+      // Se encontrou categorias correspondentes, busca produtos dessas categorias
+      if (matchingCategories.length > 0) {
+        const categoryProducts = products.filter(product => 
+          product.categoria_id && 
+          matchingCategories.some(cat => cat.nome === product.categoria_id.nome)
+        );
+        
+        // Adiciona produtos da categoria que não estavam nos resultados
+        categoryProducts.forEach(product => {
+          if (!filteredProducts.find(p => p.id === product.id)) {
+            filteredProducts.push(product);
+          }
+        });
+      }
+
+      // Ordena por relevância
+      const sortedProducts = filteredProducts.sort((a, b) => {
+        const aNormalized = normalizeText(a.nome);
+        const bNormalized = normalizeText(b.nome);
+        
+        // Produtos que começam com a query primeiro
+        const aStartsWithQuery = queryWords.some(word => aNormalized.startsWith(word));
+        const bStartsWithQuery = queryWords.some(word => bNormalized.startsWith(word));
+        
+        if (aStartsWithQuery && !bStartsWithQuery) return -1;
+        if (!aStartsWithQuery && bStartsWithQuery) return 1;
+        
+        // Produtos que contêm a query completa primeiro
+        if (aNormalized.includes(normalizedQuery) && !bNormalized.includes(normalizedQuery)) return -1;
+        if (!aNormalized.includes(normalizedQuery) && bNormalized.includes(normalizedQuery)) return 1;
+        
+        return 0;
+      });
+
+      setSearchSuggestions(sortedProducts.slice(0, 8));
+    } catch (error) {
+      console.error('Erro ao buscar sugestões:', error);
+      setSearchSuggestions([]);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   // --- EFEITOS ---
 
@@ -59,7 +235,7 @@ const Header = () => {
     else setCurrentPage("");
   }, [location.pathname]);
 
-  // FIX: Listen for cart updates and refresh cart data
+  // Listen for cart updates
   useEffect(() => {
     const handleCartUpdate = () => {
       console.log('Cart update event received in Header');
@@ -70,6 +246,70 @@ const Header = () => {
     return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, [refreshCart]);
 
+  // Monitora mudanças na URL para limpar o campo de busca
+  useEffect(() => {
+    if (!location.pathname.includes('/produtos') || !location.search.includes('q=')) {
+      setSearchValue('');
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [location]);
+
+  // Listener para navegação do browser
+  useEffect(() => {
+    const handlePopState = () => {
+      setSearchValue('');
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Debounce para buscar sugestões
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchValue.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchSuggestions(searchValue);
+      }, 300);
+    } else {
+      setSearchSuggestions([]);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchValue]);
+
+  // Click outside para fechar sugestões
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        showSuggestions &&
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+
+    if (showSuggestions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSuggestions]);
+
+  // Click outside para carrinho
   useEffect(() => {
     function handleClickOutsideCart(event) {
       if (
@@ -86,6 +326,7 @@ const Header = () => {
     return () => document.removeEventListener("click", handleClickOutsideCart);
   }, [isCartOpen]);
 
+  // Click outside para perfil
   useEffect(() => {
     function handleClickOutsideProfileModal(event) {
       if (
@@ -104,7 +345,7 @@ const Header = () => {
       document.removeEventListener("click", handleClickOutsideProfileModal);
   }, [isProfileModalOpen]);
 
-  // --- MANIPULADORES DE EVENTOS E FUNÇÕES AUXILIARES ---
+  // --- MANIPULADORES DE EVENTOS ---
 
   const handleLogout = async () => {
     if (logoutUser) {
@@ -161,6 +402,48 @@ const Header = () => {
 
   const handleSearchChange = (e) => {
     setSearchValue(e.target.value);
+    setShowSuggestions(true);
+  };
+
+  // Função para executar a pesquisa
+  const handleSearch = (e, customQuery = null) => {
+    e?.preventDefault();
+    
+    const queryToSearch = customQuery || searchValue.trim();
+    
+    if (queryToSearch) {
+      closeAllPopovers();
+      setShowSuggestions(false);
+      
+      const searchUrl = `/produtos?q=${encodeURIComponent(queryToSearch)}`;
+      
+      if (location.pathname === '/produtos') {
+        const newSearchParams = new URLSearchParams();
+        newSearchParams.set('q', queryToSearch);
+        navigate(`/produtos?${newSearchParams.toString()}`, { replace: true });
+      } else {
+        navigate(searchUrl);
+      }
+      
+      setTimeout(() => {
+        setSearchValue('');
+        setSearchSuggestions([]);
+      }, 100);
+    }
+  };
+
+  // Função para selecionar sugestão
+  const handleSelectSuggestion = (suggestion) => {
+    setSearchValue(suggestion.nome);
+    setShowSuggestions(false);
+    handleSearch(null, suggestion.nome);
+  };
+
+  // Função para lidar com Enter no input
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    }
   };
 
   const getFirstName = () => {
@@ -170,7 +453,6 @@ const Header = () => {
     return "";
   };
 
-  // FIX: Add function to handle cart clearing
   const handleClearCart = async () => {
     try {
       const { clearCart, getCart } = await import('../../services/cartService');
@@ -260,17 +542,78 @@ const Header = () => {
               </Link>
             </div>
             <div className="flex-1 max-w-2xl mx-auto px-8">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Pesquisar produto..."
-                  value={searchValue}
-                  onChange={handleSearchChange}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-md bg-gray-100 focus:outline-none text-gray-800 focus:placeholder-transparent"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <Search className="text-gray-400 cursor-pointer" size={20} />
-                </div>
+              <div ref={searchContainerRef} className="relative">
+                <form onSubmit={handleSearch} className="flex items-center">
+                  <input
+                    type="text"
+                    placeholder={location.search.includes('q=') ? 'Nova pesquisa...' : 'Pesquisar produto...'}
+                    value={searchValue}
+                    onChange={handleSearchChange}
+                    onKeyPress={handleSearchKeyPress}
+                    onFocus={() => searchValue && setShowSuggestions(true)}
+                    className="w-full pl-4 pr-20 py-2.5 rounded-md bg-gray-100 focus:outline-none text-gray-800 focus:placeholder-transparent"
+                  />
+                  {searchValue && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchValue('');
+                        setSearchSuggestions([]);
+                        setShowSuggestions(false);
+                      }}
+                      className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      aria-label="Limpar busca"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                  <button 
+                    type="submit"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 bg-transparent border-none"
+                    aria-label="Pesquisar"
+                  >
+                    <Search className="text-gray-400 cursor-pointer hover:text-gray-600" size={20} />
+                  </button>
+                </form>
+
+                {/* Sugestões de busca - Desktop */}
+                {showSuggestions && searchValue && (
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-white rounded-md shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                    {loadingSuggestions ? (
+                      <div className="p-4 text-center text-gray-500">
+                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
+                      </div>
+                    ) : searchSuggestions.length > 0 ? (
+                      <div className="py-2">
+                        <div className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wider">
+                          Sugestões
+                        </div>
+                        {searchSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            onClick={() => handleSelectSuggestion(suggestion)}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between group"
+                          >
+                            <div>
+                              <div className="text-sm text-gray-900">{suggestion.nome}</div>
+                              <div className="text-xs text-gray-500">
+                                {suggestion.categoria_id && (
+                                  <span className="mr-2">{suggestion.categoria_id.nome}</span>
+                                )}
+                                R$ {(suggestion.preco_promocional || suggestion.preco_original).toFixed(2).replace('.', ',')}
+                              </div>
+                            </div>
+                            <Search className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500 text-sm">
+                        Nenhuma sugestão encontrada
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center">
@@ -383,23 +726,61 @@ const Header = () => {
           </div>
         </div>
 
+        {/* Busca Mobile */}
         {isSearchOpen && (
           <div className="md:hidden py-3 pb-5">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 placeholder="Pesquisar produto..."
                 value={searchValue}
                 onChange={handleSearchChange}
+                onKeyPress={handleSearchKeyPress}
+                onFocus={() => searchValue && setShowSuggestions(true)}
                 className="w-full pl-4 pr-10 py-2.5 rounded-md bg-gray-100 focus:outline-none text-gray-800 focus:placeholder-transparent"
                 autoFocus
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <button className="bg-transparent border-none p-1">
-                  <Search className="text-gray-400" size={20} />
-                </button>
+              <button 
+                type="submit"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 bg-transparent border-none p-1"
+                aria-label="Pesquisar"
+              >
+                <Search className="text-gray-400" size={20} />
+              </button>
+            </form>
+
+            {/* Sugestões de busca - Mobile */}
+            {showSuggestions && searchValue && (
+              <div className="mt-2 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                {loadingSuggestions ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
+                  </div>
+                ) : searchSuggestions.length > 0 ? (
+                  <div className="py-1">
+                    {searchSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.id}
+                        onClick={() => handleSelectSuggestion(suggestion)}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50"
+                      >
+                        <div className="text-sm text-gray-900">{suggestion.nome}</div>
+                        <div className="text-xs text-gray-500">
+                          {suggestion.categoria_id && (
+                            <span className="mr-2">{suggestion.categoria_id.nome}</span>
+                          )}
+                          R$ {(suggestion.preco_promocional || suggestion.preco_original).toFixed(2).replace('.', ',')}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    Nenhuma sugestão encontrada
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -429,6 +810,7 @@ const Header = () => {
         </nav>
       </div>
 
+      {/* Menu Mobile */}
       {isMenuOpen && (
         <div className="md:hidden fixed inset-0 bg-white z-50 overflow-y-auto">
           <div className="container mx-auto p-4">
@@ -577,7 +959,7 @@ const Header = () => {
         </div>
       )}
 
-      {/* FIX: Updated cart popup to show actual cart items */}
+      {/* Carrinho Popup */}
       {isCartOpen && (
         <div
           ref={cartRef}
@@ -655,6 +1037,7 @@ const Header = () => {
         </div>
       )}
 
+      {/* Filtro Mobile */}
       {isFilterOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end md:hidden">
           <div className="bg-white h-full w-full max-w-xs overflow-y-auto">
