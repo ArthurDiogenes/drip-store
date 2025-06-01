@@ -54,7 +54,7 @@ const Toast = ({ message, type = 'success', isVisible, onClose, duration = 4000 
 
   const toastStyles = {
     position: 'fixed',
-    top: '20px',
+    top: '80px',
     right: '20px',
     zIndex: 1000,
     maxWidth: '400px',

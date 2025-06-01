@@ -1,6 +1,6 @@
 .toastContainer {
   position: fixed;
-  top: 20px;
+  top: 80px;
   right: 20px;
   z-index: 1000;
   transform: translateX(100%);
@@ -31,7 +31,6 @@
   }
 }
 
-/* Mobile adjustments */
 @media (max-width: 640px) {
   .toastContainer {
     top: 10px;
