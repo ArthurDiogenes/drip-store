@@ -1,12 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
     <footer className="bg-black text-white py-8 px-6">
       <div className="max-w-screen-xl mx-auto">
-        {/* Mobile layout (default) transforms into desktop layout on md breakpoint */}
         <div className="md:grid md:grid-cols-4 md:gap-8">
-          {/* Logo and Description Section */}
           <div className="mb-8 md:mb-0">
             <div className="flex items-center mb-6">
               <img
@@ -18,7 +17,6 @@ const Footer = () => {
             <p className="text-gray-400 mb-6">
                A Digital Store é sua loja online de produtos esportivos e lifestyle. Oferecemos as melhores marcas com qualidade garantida e entrega rápida para todo o Brasil.
             </p>
-            {/* Social Media Icons */}
             <div className="flex space-x-6">
               <a href="#" aria-label="Facebook" className="text-white hover:text-gray-300 transition-colors duration-200">
                 <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-current">
@@ -41,9 +39,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* On mobile: Two-column grid for Info and Categories */}
           <div className="grid grid-cols-2 gap-8 mb-8 md:hidden">
-            {/* Information Section */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Informação</h3>
               <ul className="space-y-2">
@@ -52,25 +48,22 @@ const Footer = () => {
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Wishlist</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Blog</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Trabalhe conosco</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Meus Pedidos</a></li>
+                <li><Link to="/meus-pedidos" className="text-gray-400 hover:text-white transition-colors duration-200">Meus Pedidos</Link></li>
               </ul>
             </div>
 
-            {/* Categories Section */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Categorias</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Camisetas</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Calças</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Bonés</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Headphones</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Tênis</a></li>
+                <li><Link to="/produtos?categoria=camisetas" className="text-gray-400 hover:text-white transition-colors duration-200">Camisetas</Link></li>
+                <li><Link to="/produtos?categoria=calcas" className="text-gray-400 hover:text-white transition-colors duration-200">Calças</Link></li>
+                <li><Link to="/produtos?categoria=bones" className="text-gray-400 hover:text-white transition-colors duration-200">Bonés</Link></li>
+                <li><Link to="/produtos?categoria=headphones" className="text-gray-400 hover:text-white transition-colors duration-200">Headphones</Link></li>
+                <li><Link to="/produtos?categoria=tenis" className="text-gray-400 hover:text-white transition-colors duration-200">Tênis</Link></li>
               </ul>
             </div>
           </div>
 
-          {/* On desktop: Individual columns for Information and Categories */}
-          {/* Information Section - Only visible on desktop */}
           <div className="hidden md:block">
             <h3 className="text-lg font-semibold mb-4">Informação</h3>
             <ul className="space-y-2">
@@ -79,23 +72,21 @@ const Footer = () => {
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Wishlist</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Blog</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Trabalhe conosco</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Meus Pedidos</a></li>
+              <li><Link to="/meus-pedidos" className="text-gray-400 hover:text-white transition-colors duration-200">Meus Pedidos</Link></li>
             </ul>
           </div>
 
-          {/* Categories Section - Only visible on desktop */}
           <div className="hidden md:block">
             <h3 className="text-lg font-semibold mb-4">Categorias</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Camisetas</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Calças</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Bonés</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Headphones</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Tênis</a></li>
+              <li><Link to="/produtos?categoria=camisetas" className="text-gray-400 hover:text-white transition-colors duration-200">Camisetas</Link></li>
+              <li><Link to="/produtos?categoria=calcas" className="text-gray-400 hover:text-white transition-colors duration-200">Calças</Link></li>
+              <li><Link to="/produtos?categoria=bones" className="text-gray-400 hover:text-white transition-colors duration-200">Bonés</Link></li>
+              <li><Link to="/produtos?categoria=headphones" className="text-gray-400 hover:text-white transition-colors duration-200">Headphones</Link></li>
+              <li><Link to="/produtos?categoria=tenis" className="text-gray-400 hover:text-white transition-colors duration-200">Tênis</Link></li>
             </ul>
           </div>
 
-          {/* Contact Section */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Contato</h3>
             <address className="not-italic text-gray-400">
@@ -105,10 +96,8 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="border-t border-gray-800 my-6"></div>
 
-        {/* Copyright */}
         <div className="text-center text-gray-500">
           <p>© 2025 Digital College</p>
         </div>

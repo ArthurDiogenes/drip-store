@@ -110,6 +110,7 @@ const ProductList = () => {
     });
     setSortBy(searchParams.get("ordenar") || "relevancia");
     setPage(parseInt(searchParams.get("pagina") || "1", 10));
+    window.scrollTo(0, 0);
   }, [searchParams]);
 
   useEffect(() => {
