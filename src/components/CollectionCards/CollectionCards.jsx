@@ -57,7 +57,7 @@ const CollectionCards = ({ collections = [] }) => {
       discount: "30",
       imageUrl: "/images/collections/collection-3.png",
       buttonText: "Ver coleção",
-      link: "/produtos?categoria=headphones"
+      link: "/produtos?categoria=headphones" 
     }
   ];
 
