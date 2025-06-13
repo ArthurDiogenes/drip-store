@@ -64,7 +64,7 @@
 
 .checkoutButton {
   width: 100%;
-  background-color: #f59e0b;
+  background-color: #db2777;
   color: white;
   border: none;
   border-radius: 0.25rem;
@@ -76,7 +76,7 @@
 }
 
 .checkoutButton:hover {
-  background-color: #d97706;
+  background-color: #be185d;
 }
 
 @media (max-width: 767px) {
