@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Monitora o scroll para mostrar/ocultar o botão flutuante
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.pageYOffset > 300);
@@ -14,7 +13,6 @@ const Footer = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Função para rolar até o topo
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -44,7 +42,7 @@ const Footer = () => {
                 <a
                   href="#"
                   aria-label="Facebook"
-                  className="text-white hover:text-gray-300 transition-colors duration-200"
+                  className="text-white md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                 >
                   <svg
                     role="img"
@@ -59,7 +57,7 @@ const Footer = () => {
                 <a
                   href="#"
                   aria-label="Instagram"
-                  className="text-white hover:text-gray-300 transition-colors duration-200"
+                  className="text-white md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                 >
                   <svg
                     role="img"
@@ -74,7 +72,7 @@ const Footer = () => {
                 <a
                   href="#"
                   aria-label="Twitter"
-                  className="text-white hover:text-gray-300 transition-colors duration-200"
+                  className="text-white md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                 >
                   <svg
                     role="img"
@@ -96,7 +94,7 @@ const Footer = () => {
                   <li>
                     <a
                       href="#"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Sobre Drip Store
                     </a>
@@ -104,7 +102,7 @@ const Footer = () => {
                   <li>
                     <a
                       href="#"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Segurança
                     </a>
@@ -112,7 +110,7 @@ const Footer = () => {
                   <li>
                     <a
                       href="#"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Wishlist
                     </a>
@@ -120,7 +118,7 @@ const Footer = () => {
                   <li>
                     <a
                       href="#"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Blog
                     </a>
@@ -128,7 +126,7 @@ const Footer = () => {
                   <li>
                     <a
                       href="#"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Trabalhe conosco
                     </a>
@@ -136,7 +134,7 @@ const Footer = () => {
                   <li>
                     <Link
                       to="/meus-pedidos"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Meus Pedidos
                     </Link>
@@ -150,7 +148,7 @@ const Footer = () => {
                   <li>
                     <Link
                       to="/produtos?categoria=camisetas"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Camisetas
                     </Link>
@@ -158,7 +156,7 @@ const Footer = () => {
                   <li>
                     <Link
                       to="/produtos?categoria=calcas"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Calças
                     </Link>
@@ -166,7 +164,7 @@ const Footer = () => {
                   <li>
                     <Link
                       to="/produtos?categoria=bones"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Bonés
                     </Link>
@@ -174,7 +172,7 @@ const Footer = () => {
                   <li>
                     <Link
                       to="/produtos?categoria=headphones"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Headphones
                     </Link>
@@ -182,7 +180,7 @@ const Footer = () => {
                   <li>
                     <Link
                       to="/produtos?categoria=tenis"
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className="text-gray-400 md:hover:text-pink-600 active:text-pink-600 transition-colors duration-200"
                     >
                       Tênis
                     </Link>
@@ -197,7 +195,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Sobre Drip Store
                   </a>
@@ -205,7 +203,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Segurança
                   </a>
@@ -213,7 +211,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Wishlist
                   </a>
@@ -221,7 +219,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Blog
                   </a>
@@ -229,7 +227,7 @@ const Footer = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Trabalhe conosco
                   </a>
@@ -237,7 +235,7 @@ const Footer = () => {
                 <li>
                   <Link
                     to="/meus-pedidos"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Meus Pedidos
                   </Link>
@@ -251,7 +249,7 @@ const Footer = () => {
                 <li>
                   <Link
                     to="/produtos?categoria=camisetas"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Camisetas
                   </Link>
@@ -259,7 +257,7 @@ const Footer = () => {
                 <li>
                   <Link
                     to="/produtos?categoria=calcas"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Calças
                   </Link>
@@ -267,7 +265,7 @@ const Footer = () => {
                 <li>
                   <Link
                     to="/produtos?categoria=bones"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Bonés
                   </Link>
@@ -275,7 +273,7 @@ const Footer = () => {
                 <li>
                   <Link
                     to="/produtos?categoria=headphones"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Headphones
                   </Link>
@@ -283,7 +281,7 @@ const Footer = () => {
                 <li>
                   <Link
                     to="/produtos?categoria=tenis"
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 hover:text-pink-600 transition-colors duration-200"
                   >
                     Tênis
                   </Link>
@@ -311,7 +309,6 @@ const Footer = () => {
         </div>
       </footer>
 
-      {/* Botão Flutuante com Seta Rosa */}
       <button
         onClick={scrollToTop}
         className={`fixed bottom-8 right-8 bg-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 z-50 ${
