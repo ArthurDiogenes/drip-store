@@ -68,7 +68,55 @@ A **DripStore** é uma aplicação de e-commerce completa desenvolvida para o Ge
 - **Sistema de Avaliações**: Ratings e comentários
 - **Produtos Relacionados**: Recomendações automáticas
 
+## ⚙️ Configuração e Instalação
 
+### Pré-requisitos
+- Node.js 18+
+- npm ou yarn
+- Conta no Supabase
+
+### Instalação
+```bash
+# Clone o repositório
+git clone https://github.com/ArthurDiogenes/drip-store.git
+
+# Entre no diretório
+cd drip-store
+
+# Instale as dependências
+npm install
+
+# Configure as variáveis de ambiente
+cp .env.example .env.local
+```
+
+### Configuração do Banco de Dados
+Execute as migrations na ordem numérica para configurar o banco:
+
+1. `001_create_user_profile.sql` - Estrutura de usuários
+2. `002_create_catalog_structure.sql` - Catálogo base
+3. `003_create_products.sql` - Sistema de produtos
+4. `004_create_product_variations.sql` - Variações de produtos
+5. `005_create_reviews_system.sql` - Sistema de avaliações
+6. `006_create_orders_system.sql` - Sistema de pedidos
+7. `007_create_coupons_system.sql` - Sistema de cupons
+8. `008_create_cart_wishlist.sql` - Carrinho e wishlist
+9. `009_create_functions_triggers.sql` - Funções e triggers
+10. `010_create_indexes.sql` - Índices de performance
+11. `011_initial_data.sql` - Dados iniciais
+12. `012_sample_product.sql` - Produto de exemplo
+
+### Executar o Projeto
+```bash
+# Modo desenvolvimento
+npm run dev
+
+# Build de produção
+npm run build
+
+# Pré-visualização da build
+npm run preview
+```
 
 ## 🎨 Componentes Principais
 
@@ -123,22 +171,13 @@ A aplicação é totalmente responsiva, funcionando perfeitamente em:
 - 💻 Desktops (1024px+)
 - 🖥️ Telas grandes (1440px+)
 
-## 🚀 Deploy
-
-### Build de Produção
-```bash
-npm run build
-```
-
-### Pré-visualização
-```bash
-npm run preview
-```
-
-### Deploy Automático
-O projeto está configurado para deploy automático no Vercel
-
 ## 🧪 Dados de Teste
+
+### Conta Supabase
+```
+Email: dripstore025@gmail.com
+Senha: Drip@7933
+```
 
 ### Usuário de Demonstração
 ```
@@ -160,6 +199,21 @@ CVV: 123
 01000-000 (São Paulo/SP) - Frete Padrão
 20000-000 (Rio de Janeiro/RJ) - Frete Padrão
 ```
+
+## 🚀 Deploy
+
+### Build de Produção
+```bash
+npm run build
+```
+
+### Pré-visualização
+```bash
+npm run preview
+```
+
+### Deploy Automático
+O projeto está configurado para deploy automático no Vercel
 
 ## 🤝 Como Contribuir
 
